@@ -281,7 +281,7 @@ async function processGames(games, { concurrency = CONCURRENCY_NORMAL, batchDela
 
 // ── Sync historique avec checkpoint (reprend où elle s'était arrêtée) ──────────
 async function syncHistory() {
-  const WINDOW_MS  = 10 * 60 * 1_000; // 10 minutes par fenêtre (équilibre vitesse/couverture)
+  const WINDOW_MS  = 2 * 60 * 1_000; // 2 minutes par fenêtre (couverture plus fine)
   const HISTORY_MS = 120 * 24 * 60 * 60 * 1_000; // ~4 mois jusqu'à décembre 2025
   const now    = Date.now();
   const oldest = now - HISTORY_MS;
