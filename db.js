@@ -221,8 +221,14 @@ function setCheckpoint(key, value) {
   }
 }
 
+// Reset les checkpoints au démarrage sur Render (car la DB est perdue à chaque déploiement)
+function resetCheckpoints() {
+  db.set("checkpoints", []).write();
+  console.log("[db] Checkpoints reset");
+}
+
 module.exports = {
   insertRun, insertRunsBatch, getLeaderboard, getMaps, isSeen, markSeen, markSeenBatch,
   getStats, getFeed, getPlayerMaps, getGlobalRanking,
-  getCheckpoint, setCheckpoint,
+  getCheckpoint, setCheckpoint, resetCheckpoints,
 };

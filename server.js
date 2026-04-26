@@ -6,7 +6,7 @@ const path    = require("path");
 
 const {
   getLeaderboard, getMaps, insertRun, getStats,
-  getGlobalRanking, getPlayerMaps, getFeed
+  getGlobalRanking, getPlayerMaps, getFeed, resetCheckpoints
 } = require("./db");
 const { syncSpeedruns, syncHistory, syncMissed } = require("./sync");
 const { fetchGameDetail } = require("./sync");
@@ -220,6 +220,12 @@ if (SELF_URL) {
 
 app.listen(PORT, () => {
   console.log(`\n🎮  OpenFront SpeedRun · http://localhost:${PORT}\n`);
+  
+  // Reset les checkpoints sur Render pour repartir proprement
+  if (process.env.RENDER) {
+    resetCheckpoints();
+  }
+  
   setTimeout(async () => {
     await syncMissed();
     console.log("[boot] Sync historique...");
