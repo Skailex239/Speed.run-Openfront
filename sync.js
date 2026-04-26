@@ -345,7 +345,7 @@ async function syncHistory() {
     console.log(`[history] ${done}/${windows.length} fenêtres (${pct}%) — ${totalRuns} runs — jusqu'au ${new Date(oldestReached).toISOString().slice(0,10)}`);
     
     // Pause entre les batches pour éviter le rate-limit
-    if (BATCH_DELAY_HISTORY > 0 && i + CHECKPOINT_EVERY < windows.length) {
+    if (BATCH_DELAY_HISTORY > 0 && i + batch.length < windows.length) {
       console.log(`[history] Pause de ${BATCH_DELAY_HISTORY/1000}s avant le prochain batch...`);
       await sleep(BATCH_DELAY_HISTORY);
     }
