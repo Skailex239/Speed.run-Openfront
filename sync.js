@@ -288,7 +288,7 @@ async function syncHistory() {
 
   // Reprend depuis le checkpoint si existant, sinon part du présent
   const saved = getCheckpoint('history_oldest_reached');
-  const resumeFrom = saved ? Math.max(parseInt(saved) - WINDOW_MS, oldest) : now;
+  const resumeFrom = saved ? Math.max(parseInt(saved) - (WINDOW_MS * 5), oldest) : now;
 
   if (saved) {
     console.log(`[history] Reprise depuis ${new Date(resumeFrom).toISOString().slice(0,10)} (checkpoint trouvé)`);
