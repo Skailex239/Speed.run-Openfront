@@ -14,7 +14,7 @@ const CONCURRENCY_HISTORY = 3; // fenêtres traitées en parallèle par batch (m
 const BATCH_DELAY_NORMAL  = 0;     // ms
 const BATCH_DELAY_HISTORY = 30000; // ms - pause entre batches (30s)
 
-const CHECKPOINT_EVERY = 100; // sauvegarde le checkpoint tous les N fenêtres
+const CHECKPOINT_EVERY = 200; // sauvegarde le checkpoint tous les N fenêtres (augmenté pour 2min windows)
 
 const DELAY_429 = 5_000; // pause quand on reçoit un 429
 
