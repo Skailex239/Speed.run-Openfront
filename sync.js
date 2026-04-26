@@ -451,4 +451,4 @@ async function syncSpeedruns() {
   return { newRuns };
 }
 
-module.exports = { syncSpeedruns, syncHistory, syncMissed };
+module.exports = { syncSpeedruns, syncHistory, syncMissed, fetchGameDetail };

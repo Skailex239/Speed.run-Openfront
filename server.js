@@ -9,6 +9,7 @@ const {
   getGlobalRanking, getPlayerMaps, getFeed
 } = require("./db");
 const { syncSpeedruns, syncHistory, syncMissed } = require("./sync");
+const { fetchGameDetail } = require("./sync");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -117,17 +118,80 @@ app.post("/api/runs", async (req, res) => {
   const duration_s = (parseInt(minutes)||0)*60 + (parseInt(seconds)||0);
   if (duration_s <= 0) return res.status(400).json({ error: "Durée invalide" });
 
-  let game_id = `manual-${Date.now()}`;
+  let game_id = null;
   if (gameLink) { const parsed = parseGameId(gameLink); if (parsed) game_id = parsed; }
 
-  const run = {
-    game_id, player: player.trim().slice(0,32),
-    map: map || "Europe", duration_s,
-    difficulty: "—", bots: 400, won: 1,
-    played_at: new Date().toISOString(),
-  };
-  insertRun(run);
-  res.json({ ok: true, run: { ...run, time: secsToTime(duration_s) } });
+  // Validation via l'API si un game ID est fourni
+  if (game_id) {
+    try {
+      const raw = await fetchGameDetail(game_id);
+      if (!raw || !raw.info) {
+        return res.status(400).json({ error: "Partie introuvable — ce code de game n'existe pas" });
+      }
+
+      const detail = raw.info;
+      const config = detail.config || {};
+
+      // Vérifier que la partie est publique FFA
+      if (config.gameType !== "Public" || config.gameMode !== "Free For All") {
+        return res.status(400).json({ error: "Cette partie n'est pas un FFA Public" });
+      }
+
+      // Vérifier le gagnant
+      const players = detail.players || [];
+      const winner = detail.winner;
+      if (!winner || !Array.isArray(winner) || winner.length < 2) {
+        return res.status(400).json({ error: "Aucun gagnant trouvé dans cette partie" });
+      }
+
+      const winnerPlayer = players.find(p => p.clientID === winner[1]);
+      if (!winnerPlayer) {
+        return res.status(400).json({ error: "Gagnant introuvable dans les données de la partie" });
+      }
+
+      // Vérifier que le pseudo correspond au gagnant
+      const submittedPlayer = player.trim().toLowerCase();
+      const actualWinner = (winnerPlayer.username || "").toLowerCase();
+      if (submittedPlayer !== actualWinner) {
+        return res.status(400).json({ error: `Ce pseudo ne correspond pas au gagnant de cette partie. Le gagnant est : ${winnerPlayer.username}` });
+      }
+
+      // Vérifier le nombre de joueurs
+      const humanPlayers = players.filter(p => !p.isBot);
+      if (humanPlayers.length < 10) {
+        return res.status(400).json({ error: `Pas assez de joueurs (${humanPlayers.length}/10 minimum)` });
+      }
+
+      // Utiliser les données réelles de l'API
+      const actualMap = config.gameMap || map || "Europe";
+      const actualDifficulty = config.difficulty || "Medium";
+
+      const run = {
+        game_id,
+        player: winnerPlayer.username,
+        map: actualMap,
+        duration_s,
+        difficulty: actualDifficulty,
+        bots: config.bots || 400,
+        won: 1,
+        played_at: detail.start ? new Date(detail.start > 100000 ? detail.start : detail.start * 1000).toISOString() : new Date().toISOString(),
+      };
+      insertRun(run);
+      res.json({ ok: true, run: { ...run, time: secsToTime(duration_s) } });
+    } catch (e) {
+      return res.status(400).json({ error: `Impossible de vérifier cette partie : ${e.message}` });
+    }
+  } else {
+    // Soumission manuelle sans game link — pas de validation possible
+    const run = {
+      game_id: `manual-${Date.now()}`, player: player.trim().slice(0,32),
+      map: map || "Europe", duration_s,
+      difficulty: "—", bots: 400, won: 1,
+      played_at: new Date().toISOString(),
+    };
+    insertRun(run);
+    res.json({ ok: true, run: { ...run, time: secsToTime(duration_s) } });
+  }
 });
 
 // GET /ping - keep-alive pour Render (empêche le serveur de s'endormir)
