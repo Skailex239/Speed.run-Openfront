@@ -10,9 +10,9 @@ const TIME_OFFSET_SECS = 32;
 
 
 const CONCURRENCY_NORMAL  = 50;
-const CONCURRENCY_HISTORY = 20; // fenêtres traitées en parallèle par batch (Render free = 1 CPU)
+const CONCURRENCY_HISTORY = 10; // fenêtres traitées en parallèle par batch (stable pour Render)
 const BATCH_DELAY_NORMAL  = 0;     // ms
-const BATCH_DELAY_HISTORY = 5000; // ms - pause entre batches (5s)
+const BATCH_DELAY_HISTORY = 10000; // ms - pause entre batches (10s)
 
 const CHECKPOINT_EVERY = 100; // sauvegarde le checkpoint tous les N fenêtres
 
