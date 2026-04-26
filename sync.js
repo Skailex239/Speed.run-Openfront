@@ -3,18 +3,18 @@ const { insertRun, insertRunsBatch, isSeen, markSeen, markSeenBatch, getCheckpoi
 const { storeRun } = require("./store");
 
 const API_BASE         = "https://api.openfront.io";
-const FETCH_TIMEOUT    = 10_000;
+const FETCH_TIMEOUT    = 20_000;
 const TIME_OFFSET_SECS = 32;
 
 // ── Concurrence : nombre de requêtes simultanées ───────────────────────────────
 
 
 const CONCURRENCY_NORMAL  = 50;
-const CONCURRENCY_HISTORY = 100; // fenêtres traitées en parallèle par batch
+const CONCURRENCY_HISTORY = 20; // fenêtres traitées en parallèle par batch (Render free = 1 CPU)
 const BATCH_DELAY_NORMAL  = 0;     // ms
-const BATCH_DELAY_HISTORY = 5000; // ms - pause entre batches (5s, optimisé pour serveur 24/7)
+const BATCH_DELAY_HISTORY = 30000; // ms - pause entre batches (30s)
 
-const CHECKPOINT_EVERY = 200; // sauvegarde le checkpoint tous les N fenêtres
+const CHECKPOINT_EVERY = 100; // sauvegarde le checkpoint tous les N fenêtres
 
 const DELAY_429 = 5_000; // pause quand on reçoit un 429
 
