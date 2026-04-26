@@ -221,10 +221,10 @@ if (SELF_URL) {
 app.listen(PORT, () => {
   console.log(`\n🎮  OpenFront SpeedRun · http://localhost:${PORT}\n`);
   
-  // Reset les checkpoints sur Render pour repartir proprement
-  if (process.env.RENDER) {
-    resetCheckpoints();
-  }
+  // Reset des checkpoints désactivé pour permettre la persistance sur Render
+  // if (process.env.RENDER) {
+  //   resetCheckpoints();
+  // }
   
   setTimeout(async () => {
     await syncMissed();
