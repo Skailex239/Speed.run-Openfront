@@ -10,9 +10,9 @@ const TIME_OFFSET_SECS = 32;
 
 
 const CONCURRENCY_NORMAL  = 50;
-const CONCURRENCY_HISTORY = 20; // fenêtres traitées en parallèle par batch (très conservateur)
+const CONCURRENCY_HISTORY = 50; // fenêtres traitées en parallèle par batch
 const BATCH_DELAY_NORMAL  = 0;     // ms
-const BATCH_DELAY_HISTORY = 60000; // ms - pause entre batches pour éviter le rate-limit (60s)
+const BATCH_DELAY_HISTORY = 10000; // ms - pause entre batches (10s, optimisé pour serveur 24/7)
 
 const CHECKPOINT_EVERY = 500; // sauvegarde le checkpoint tous les N fenêtres
 
