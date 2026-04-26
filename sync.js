@@ -139,12 +139,17 @@ async function fetchGamesInWindow(start, end) {
   // console.log(`[timing] fetchGamesInWindow: ${t1-t0}ms`);
   if (!data) return [];
   const games = Array.isArray(data) ? data : (data.games || []);
-  return games.filter(g =>
+  const filtered = games.filter(g =>
     (g.difficulty === "Easy" || g.difficulty === "Medium" || g.difficulty === "Hard") &&
     (g.numPlayers == null || g.numPlayers >= 10) &&
     (g.mode === "Free For All" || g.mode === "FFA" || g.mode == null) &&
     (g.type === "Public" || g.type == null)
   );
+  // Log de statistiques de filtrage
+  if (games.length > 0 && filtered.length !== games.length) {
+    console.log(`[filter] ${filtered.length}/${games.length} games passent le filtre`);
+  }
+  return filtered;
 }
 
 async function fetchGameDetail(gameId) {
@@ -208,6 +213,11 @@ function extractSpeedrun(raw) {
   durationSecs = Math.max(0, durationSecs - TIME_OFFSET_SECS);
 
   const gameId = detail.gameID || detail.gameId || detail.id;
+  if (!gameId) {
+    console.warn(`[extract] Game sans ID ignoré`);
+    return null;
+  }
+
   return {
     game_id:    gameId,
     player:     winnerPlayer.username,
