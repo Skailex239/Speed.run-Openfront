@@ -304,6 +304,7 @@ async function syncHistory() {
   }
 
   console.log(`[history] ${windows.length} fenêtres restantes sur 360 jours`);
+  console.log(`[history] Période: du ${new Date(oldest).toISOString().slice(0,10)} au ${new Date(resumeFrom).toISOString().slice(0,10)}`);
   if (windows.length === 0) {
     console.log(`[history] ✅ Historique déjà complet`);
     return 0;
