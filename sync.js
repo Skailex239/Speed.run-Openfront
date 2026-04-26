@@ -16,7 +16,7 @@ const BATCH_DELAY_HISTORY = 30000; // ms - pause entre batches (30s)
 
 const CHECKPOINT_EVERY = 200; // sauvegarde le checkpoint tous les N fenêtres (augmenté pour 2min windows)
 
-const DELAY_429 = 5_000; // pause quand on reçoit un 429
+const DELAY_429 = 10_000; // pause quand on reçoit un 429 (base 10s)
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -29,7 +29,7 @@ async function fetchWithRetry(url, retries = 2) {
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(timer);
       if (res.status === 429) {
-        const wait = DELAY_429 * (attempt + 1);
+        const wait = DELAY_429 * Math.pow(2, attempt); // backoff exponentiel: 10s, 20s, 40s
         console.warn(`[rate-limit] 429 — pause ${wait}ms (tentative ${attempt + 1})`);
         await sleep(wait);
         continue;
