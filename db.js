@@ -30,11 +30,12 @@ function insertRun(run) {
 
 // ── getLeaderboard ────────────────────────────────────────────────────────────
 function getLeaderboard(map, limit = 5) {
-  return db.get("runs")
+  const runs = db.get("runs")
     .filter(r => r.map === map && r.won === 1)
-    .sortBy("duration_s")
-    .take(limit)
     .value();
+  return runs
+    .sort((a, b) => a.duration_s - b.duration_s)
+    .slice(0, limit);
 }
 
 // ── getMaps ───────────────────────────────────────────────────────────────────
