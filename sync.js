@@ -329,26 +329,67 @@ async function syncHistory() {
   for (let i = 0; i < windows.length; i += CHECKPOINT_EVERY) {
     const batch = windows.slice(i, i + CHECKPOINT_EVERY);
 
-    const batchResults = await Promise.allSettled(
-      batch.map(async ({ start, end }) => {
-        const games = await fetchGamesInWindow(start, end);
-        if (games.length === 0) return { start, runs: 0 };
-        const runs = await processGames(games, { concurrency: CONCURRENCY_HISTORY, batchDelay: 0 });
-        return { start, runs };
-      })
-    );
+    let batchSuccess = false;
+    let retryCount = 0;
+    const maxRetries = 3;
 
-    for (const r of batchResults) {
-      if (r.status === 'fulfilled') {
-        totalRuns += r.value.runs;
-        if (r.value.runs > 0) console.log(`[history] +${r.value.runs} (${r.value.start.toISOString().slice(0,10)})`);
-        oldestReached = r.value.start.getTime();
+    while (!batchSuccess && retryCount < maxRetries) {
+      let batchHasRateLimit = false;
+      const batchResults = await Promise.allSettled(
+        batch.map(async ({ start, end }) => {
+          try {
+            const games = await fetchGamesInWindow(start, end);
+            if (games.length === 0) return { start, runs: 0 };
+            const runs = await processGames(games, { concurrency: CONCURRENCY_HISTORY, batchDelay: 0 });
+            return { start, runs };
+          } catch (e) {
+            if (e.message && e.message.includes('429')) {
+              batchHasRateLimit = true;
+            }
+            throw e;
+          }
+        })
+      );
+
+      // Si rate limit détecté, attendre et réessayer
+      if (batchHasRateLimit) {
+        console.warn(`[history] ⚠️ Rate limit détecté - retry ${retryCount + 1}/${maxRetries}`);
+        await sleep(60000); // Attendre 1 minute
+        retryCount++;
+        continue;
+      }
+
+      // Vérifier si toutes les fenêtres ont réussi
+      let allSuccess = true;
+      for (const r of batchResults) {
+        if (r.status !== 'fulfilled') {
+          allSuccess = false;
+          console.warn(`[history] ⚠️ batch error: ${r.reason?.message}`);
+        }
+      }
+
+      if (allSuccess) {
+        batchSuccess = true;
+        
+        for (const r of batchResults) {
+          totalRuns += r.value.runs;
+          if (r.value.runs > 0) console.log(`[history] +${r.value.runs} (${r.value.start.toISOString().slice(0,10)})`);
+          oldestReached = r.value.start.getTime();
+        }
       } else {
-        console.warn(`[history] ⚠️ batch error: ${r.reason?.message}`);
+        console.warn(`[history] ⚠️ Erreur dans le batch - retry ${retryCount + 1}/${maxRetries}`);
+        await sleep(30000);
+        retryCount++;
       }
     }
 
-    // Checkpoint après chaque batch
+    // Si le batch échoue après tous les retries, arrêter
+    if (!batchSuccess) {
+      console.error(`[history] ❌ Batch échoué après ${maxRetries} retries - arrêt de la sync`);
+      break;
+    }
+
+    // Checkpoint après chaque batch (seulement si succès)
     setCheckpoint('history_oldest_reached', String(oldestReached));
     done += batch.length;
 
