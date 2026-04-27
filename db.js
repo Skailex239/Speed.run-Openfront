@@ -1,106 +1,10 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
 
-const MONGODB_URI = process.env.MONGODB_URI;
-const USE_MONGO = !!MONGODB_URI;
-
-let mongoClient = null;
-let mongoDb = null;
-let isConnected = false;
-
-// Cache local
+// Cache local avec lowdb
 const adapter = new FileSync("speedruns.json");
 const db = low(adapter);
 db.defaults({ runs: [], seen_games: [], checkpoints: [] }).write();
-
-// Connexion MongoDB avec Server API
-async function connectMongo() {
-  if (!USE_MONGO || isConnected) return;
-  try {
-    mongoClient = new MongoClient(MONGODB_URI, {
-      maxPoolSize: 5
-    });
-    await mongoClient.connect();
-    mongoDb = mongoClient.db('speedrun');
-    
-    // Ping pour confirmer la connexion
-    await mongoClient.db("admin").command({ ping: 1 });
-    isConnected = true;
-    console.log('[db] ✅ MongoDB Atlas connected - backup enabled');
-    
-    // Charger les données depuis MongoDB si disponibles
-    await loadFromMongo();
-  } catch (e) {
-    console.log('[db] MongoDB not available:', e.message);
-  }
-}
-
-// Charger depuis MongoDB
-async function loadFromMongo() {
-  if (!isConnected) return;
-  try {
-    const runs = await mongoDb.collection('runs').find({}).toArray();
-    const seen = await mongoDb.collection('seen_games').find({}).toArray();
-    const checkpoints = await mongoDb.collection('checkpoints').find({}).toArray();
-    
-    if (runs.length > 0) {
-      db.set('runs', runs).write();
-      console.log(`[db] Loaded ${runs.length} runs from MongoDB`);
-    }
-    if (seen.length > 0) {
-      db.set('seen_games', seen).write();
-      console.log(`[db] Loaded ${seen.length} seen games from MongoDB`);
-    }
-    if (checkpoints.length > 0) {
-      db.set('checkpoints', checkpoints).write();
-      console.log(`[db] Loaded ${checkpoints.length} checkpoints from MongoDB`);
-    }
-  } catch (e) {
-    console.log('[db] Failed to load from MongoDB:', e.message);
-  }
-}
-
-// Sauvegarder vers MongoDB
-async function saveToMongo() {
-  if (!isConnected) return;
-  try {
-    const runs = db.get('runs').value();
-    const seen = db.get('seen_games').value();
-    const checkpoints = db.get('checkpoints').value();
-    
-    // Upsert en batch
-    if (runs.length > 0) {
-      await mongoDb.collection('runs').deleteMany({});
-      if (runs.length > 0) await mongoDb.collection('runs').insertMany(runs);
-    }
-    if (seen.length > 0) {
-      await mongoDb.collection('seen_games').deleteMany({});
-      if (seen.length > 0) await mongoDb.collection('seen_games').insertMany(seen);
-    }
-    if (checkpoints.length > 0) {
-      await mongoDb.collection('checkpoints').deleteMany({});
-      if (checkpoints.length > 0) await mongoDb.collection('checkpoints').insertMany(checkpoints);
-    }
-    console.log('[db] Synced to MongoDB');
-  } catch (e) {
-    console.log('[db] Failed to sync to MongoDB:', e.message);
-  }
-}
-
-// Lancer la connexion et le sync périodique
-connectMongo().then(() => {
-  // Sync toutes les 60 secondes
-  setInterval(saveToMongo, 60000);
-});
-
-// Sync avant l'arrêt
-process.on('SIGTERM', async () => {
-  console.log('[db] SIGTERM received, syncing to MongoDB...');
-  await saveToMongo();
-  if (mongoClient) await mongoClient.close();
-  process.exit(0);
-});
 
 
 
