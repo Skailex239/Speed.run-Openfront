@@ -419,39 +419,36 @@ function getGlobalRanking(limit = 50) {
 // ── getCheckpoint / setCheckpoint ────────────────────────────────────────────
 
 function getCheckpoint(key) {
-
   const row = db.get("checkpoints").find({ key }).value();
-
-  return row ? row.value : null;
-
+  const value = row ? row.value : null;
+  console.log(`[checkpoint] GET ${key}: ${value ? 'trouvé' : 'non trouvé'}`);
+  return value;
 }
 
 function setCheckpoint(key, value) {
-
   const existing = db.get("checkpoints").find({ key }).value();
-
   if (existing) {
-
     db.get("checkpoints").find({ key }).assign({ value }).write();
-
   } else {
-
     db.get("checkpoints").push({ key, value }).write();
-
   }
-
+  console.log(`[checkpoint] SET ${key}: ${value}`);
 }
 
 
 
 // Reset les checkpoints au démarrage sur Render (car la DB est perdue à chaque déploiement)
-
 function resetCheckpoints() {
-
   db.set("checkpoints", []).write();
+  console.log("[checkpoint] RESET - tous les checkpoints effacés");
+}
 
-  console.log("[db] Checkpoints reset");
-
+// Lister tous les checkpoints pour le debug
+function listCheckpoints() {
+  const all = db.get("checkpoints").value();
+  console.log(`[checkpoint] Liste: ${all.length} checkpoint(s)`);
+  all.forEach(c => console.log(`[checkpoint]   - ${c.key}: ${c.value}`));
+  return all;
 }
 
 
@@ -462,7 +459,7 @@ module.exports = {
 
   getStats, getFeed, getPlayerMaps, getGlobalRanking,
 
-  getCheckpoint, setCheckpoint, resetCheckpoints,
+  getCheckpoint, setCheckpoint, resetCheckpoints, listCheckpoints,
 
 };
 
