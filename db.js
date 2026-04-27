@@ -19,14 +19,7 @@ async function connectMongo() {
   if (!USE_MONGO || isConnected) return;
   try {
     mongoClient = new MongoClient(MONGODB_URI, {
-      serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-      },
-      maxPoolSize: 5,
-      tls: true,
-      tlsAllowInvalidCertificates: false
+      maxPoolSize: 5
     });
     await mongoClient.connect();
     mongoDb = mongoClient.db('speedrun');
