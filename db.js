@@ -1,4 +1,4 @@
-const { MongoClient } = require('mongodb');
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
 
@@ -14,15 +14,25 @@ const adapter = new FileSync("speedruns.json");
 const db = low(adapter);
 db.defaults({ runs: [], seen_games: [], checkpoints: [] }).write();
 
-// Connexion MongoDB
+// Connexion MongoDB avec Server API
 async function connectMongo() {
   if (!USE_MONGO || isConnected) return;
   try {
-    mongoClient = new MongoClient(MONGODB_URI, { maxPoolSize: 5 });
+    mongoClient = new MongoClient(MONGODB_URI, {
+      serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+      },
+      maxPoolSize: 5
+    });
     await mongoClient.connect();
     mongoDb = mongoClient.db('speedrun');
+    
+    // Ping pour confirmer la connexion
+    await mongoClient.db("admin").command({ ping: 1 });
     isConnected = true;
-    console.log('[db] MongoDB Atlas connected - backup enabled');
+    console.log('[db] ✅ MongoDB Atlas connected - backup enabled');
     
     // Charger les données depuis MongoDB si disponibles
     await loadFromMongo();
