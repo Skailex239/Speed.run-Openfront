@@ -1,12 +1,7 @@
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
-const fs = require("fs");
 
-// Fly.io : utiliser /data si le volume est monté
-const DB_PATH = fs.existsSync("/data") ? "/data/speedruns.json" : "speedruns.json";
-console.log(`[db] Database: ${DB_PATH}`);
-
-const adapter = new FileSync(DB_PATH);
+const adapter = new FileSync("speedruns.json");
 
 const db = low(adapter);
 
