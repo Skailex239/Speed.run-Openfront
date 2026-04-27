@@ -24,7 +24,9 @@ async function connectMongo() {
         strict: true,
         deprecationErrors: true,
       },
-      maxPoolSize: 5
+      maxPoolSize: 5,
+      tls: true,
+      tlsAllowInvalidCertificates: false
     });
     await mongoClient.connect();
     mongoDb = mongoClient.db('speedrun');
