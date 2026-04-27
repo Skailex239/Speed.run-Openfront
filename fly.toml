@@ -2,11 +2,10 @@ app = "speed-run-openfront"
 primary_region = "cdg"
 
 [build]
-  builder = "heroku/buildpacks:20"
+  dockerfile = "Dockerfile"
 
 [env]
   NODE_ENV = "production"
-  ADMIN_PASSWORD = "SpeedrunADMINPASSWORDSkailex"
 
 [http_service]
   internal_port = 3000
