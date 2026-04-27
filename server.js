@@ -218,6 +218,261 @@ if (SELF_URL) {
   }, 10 * 60 * 1000); // toutes les 10 min
 }
 
+// ── Middleware d'authentification Admin ───────────────────────────────────────
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+function requireAdminAuth(req, res, next) {
+  if (!ADMIN_PASSWORD) {
+    return res.status(403).json({ error: "Admin non configuré" });
+  }
+  
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Basic ')) {
+    res.set('WWW-Authenticate', 'Basic realm="Admin Panel"');
+    return res.status(401).json({ error: "Authentification requise" });
+  }
+  
+  const credentials = Buffer.from(auth.slice(6), 'base64').toString();
+  const [username, password] = credentials.split(':');
+  
+  if (password !== ADMIN_PASSWORD) {
+    res.set('WWW-Authenticate', 'Basic realm="Admin Panel"');
+    return res.status(401).json({ error: "Mot de passe incorrect" });
+  }
+  
+  next();
+}
+
+// ── Routes Admin ──────────────────────────────────────────────────────────────
+
+// API - Lister toutes les runs (avec pagination)
+app.get("/admin/api/runs", requireAdminAuth, (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 50;
+  const map = req.query.map;
+  
+  try {
+    const low = require("lowdb");
+    const FileSync = require("lowdb/adapters/FileSync");
+    const db = low(new FileSync("speedruns.json"));
+    
+    let runs = db.get("runs").value();
+    
+    if (map) {
+      runs = runs.filter(r => r.map === map);
+    }
+    
+    runs.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    
+    const total = runs.length;
+    const start = (page - 1) * limit;
+    const paginated = runs.slice(start, start + limit);
+    
+    res.json({
+      runs: paginated,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// API - Supprimer une run par ID
+app.delete("/admin/api/runs/:id", requireAdminAuth, (req, res) => {
+  const id = parseInt(req.params.id);
+  
+  try {
+    const low = require("lowdb");
+    const FileSync = require("lowdb/adapters/FileSync");
+    const db = low(new FileSync("speedruns.json"));
+    
+    const run = db.get("runs").find({ id }).value();
+    if (!run) {
+      return res.status(404).json({ error: "Run non trouvée" });
+    }
+    
+    db.get("runs").remove({ id }).write();
+    console.log(`[admin] Run supprimée: ${run.player} - ${run.map}`);
+    
+    res.json({ success: true, message: "Run supprimée", run });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// API - Statistiques admin
+app.get("/admin/api/stats", requireAdminAuth, (req, res) => {
+  try {
+    const stats = getStats();
+    const maps = getMaps();
+    
+    res.json({
+      totalRuns: stats.total_runs,
+      totalMaps: stats.total_maps,
+      totalPlayers: stats.total_players,
+      maps: maps.map(m => m.map).sort()
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Page admin HTML protégée
+app.get("/admin/panel", requireAdminAuth, (req, res) => {
+  res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - OpenFront Speedrun</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a2e; color: #fff; }
+    h1 { color: #4ecca3; }
+    .stats { display: flex; gap: 20px; margin: 20px 0; }
+    .stat-box { background: #2d2d44; padding: 15px; border-radius: 8px; min-width: 150px; }
+    .stat-box h3 { margin: 0 0 10px 0; color: #4ecca3; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #444; }
+    th { background: #2d2d44; }
+    tr:hover { background: #2d2d44; }
+    .btn-delete { background: #e74c3c; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
+    .btn-delete:hover { background: #c0392b; }
+    .pagination { margin-top: 20px; display: flex; gap: 10px; align-items: center; }
+    .pagination button { background: #4ecca3; color: #1a1a2e; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; }
+    .pagination button:disabled { background: #444; cursor: not-allowed; }
+    .filters { margin: 20px 0; }
+    .filters select, .filters input { padding: 8px; margin-right: 10px; background: #2d2d44; color: #fff; border: 1px solid #444; }
+  </style>
+</head>
+<body>
+  <h1>🎮 Panel Admin - OpenFront Speedrun</h1>
+  
+  <div class="stats" id="stats"></div>
+  
+  <div class="filters">
+    <select id="mapFilter">
+      <option value="">Toutes les cartes</option>
+    </select>
+    <input type="text" id="searchPlayer" placeholder="Rechercher un joueur...">
+    <button onclick="loadRuns()">Recharger</button>
+  </div>
+  
+  <table id="runsTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Joueur</th>
+        <th>Carte</th>
+        <th>Temps</th>
+        <th>Difficulté</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  
+  <div class="pagination">
+    <button onclick="prevPage()" id="btnPrev">← Précédent</button>
+    <span id="pageInfo">Page 1</span>
+    <button onclick="nextPage()" id="btnNext">Suivant →</button>
+  </div>
+
+  <script>
+    let currentPage = 1;
+    let totalPages = 1;
+    
+    async function loadStats() {
+      const res = await fetch('/admin/api/stats');
+      const data = await res.json();
+      document.getElementById('stats').innerHTML = \`
+        <div class="stat-box"><h3>Total Runs</h3><p>\${data.totalRuns}</p></div>
+        <div class="stat-box"><h3>Cartes</h3><p>\${data.totalMaps}</p></div>
+        <div class="stat-box"><h3>Joueurs</h3><p>\${data.totalPlayers}</p></div>
+      \`;
+      
+      const mapSelect = document.getElementById('mapFilter');
+      mapSelect.innerHTML = '<option value="">Toutes les cartes</option>';
+      data.maps.forEach(map => {
+        mapSelect.innerHTML += \`<option value="\${map}">\${map}</option>\`;
+      });
+    }
+    
+    async function loadRuns() {
+      const map = document.getElementById('mapFilter').value;
+      const search = document.getElementById('searchPlayer').value;
+      const url = \`/admin/api/runs?page=\${currentPage}&limit=50\${map ? '&map=' + map : ''}\`;
+      
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      totalPages = data.pagination.pages;
+      document.getElementById('pageInfo').textContent = \`Page \${currentPage} / \${totalPages}\`;
+      document.getElementById('btnPrev').disabled = currentPage <= 1;
+      document.getElementById('btnNext').disabled = currentPage >= totalPages;
+      
+      const tbody = document.querySelector('#runsTable tbody');
+      tbody.innerHTML = '';
+      
+      data.runs.forEach(run => {
+        if (search && !run.player.toLowerCase().includes(search.toLowerCase())) return;
+        
+        const time = Math.floor(run.duration_s / 60) + 'm' + (run.duration_s % 60) + 's';
+        const date = run.created_at ? new Date(run.created_at).toLocaleDateString() : '-';
+        
+        tbody.innerHTML += \`
+          <tr>
+            <td>\${run.id}</td>
+            <td>\${run.player}</td>
+            <td>\${run.map}</td>
+            <td>\${time}</td>
+            <td>\${run.difficulty}</td>
+            <td>\${date}</td>
+            <td>
+              <button class="btn-delete" onclick="deleteRun(\${run.id})">Supprimer</button>
+            </td>
+          </tr>
+        \`;
+      });
+    }
+    
+    async function deleteRun(id) {
+      if (!confirm('Êtes-vous sûr de vouloir supprimer cette run ?')) return;
+      
+      const res = await fetch(\`/admin/api/runs/\${id}\`, { method: 'DELETE' });
+      if (res.ok) {
+        alert('Run supprimée avec succès');
+        loadRuns();
+        loadStats();
+      } else {
+        alert('Erreur lors de la suppression');
+      }
+    }
+    
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        loadRuns();
+      }
+    }
+    
+    function nextPage() {
+      if (currentPage < totalPages) {
+        currentPage++;
+        loadRuns();
+      }
+    }
+    
+    loadStats();
+    loadRuns();
+  </script>
+</body>
+</html>
+  `);
+});
+
+// ── Démarrage ─────────────────────────────────────────────────────────────────
+
 app.listen(PORT, () => {
   console.log(`\n🎮  OpenFront SpeedRun · http://localhost:${PORT}\n`);
   
