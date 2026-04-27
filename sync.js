@@ -10,11 +10,11 @@ const TIME_OFFSET_SECS = 32;
 
 
 const CONCURRENCY_NORMAL  = 50;
-const CONCURRENCY_HISTORY = 3; // fenêtres traitées en parallèle par batch (minimum pour éviter rate-limit)
+const CONCURRENCY_HISTORY = 5; // fenêtres traitées en parallèle par batch (optimisé pour vitesse)
 const BATCH_DELAY_NORMAL  = 0;     // ms
-const BATCH_DELAY_HISTORY = 30000; // ms - pause entre batches (30s)
+const BATCH_DELAY_HISTORY = 10000; // ms - pause entre batches (10s)
 
-const CHECKPOINT_EVERY = 200; // sauvegarde le checkpoint tous les N fenêtres (augmenté pour 2min windows)
+const CHECKPOINT_EVERY = 500; // sauvegarde le checkpoint tous les 500 fenêtres (moins d'écritures)
 
 const DELAY_429 = 10_000; // pause quand on reçoit un 429 (base 10s)
 
@@ -291,7 +291,7 @@ async function processGames(games, { concurrency = CONCURRENCY_NORMAL, batchDela
 
 // ── Sync historique avec checkpoint (reprend où elle s'était arrêtée) ──────────
 async function syncHistory() {
-  const WINDOW_MS  = 2 * 60 * 1_000; // 2 minutes par fenêtre (couverture plus fine)
+  const WINDOW_MS  = 5 * 60 * 1_000; // 5 minutes par fenêtre (équilibre vitesse/couverture)
   const HISTORY_MS = 120 * 24 * 60 * 60 * 1_000; // ~4 mois jusqu'à décembre 2025
   const now    = Date.now();
   const oldest = now - HISTORY_MS;
