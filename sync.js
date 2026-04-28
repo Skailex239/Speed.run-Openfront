@@ -9,10 +9,10 @@ const TIME_OFFSET_SECS = 32;
 // ── Concurrence : nombre de requêtes simultanées ───────────────────────────────
 
 
-const CONCURRENCY_NORMAL  = 50;    // concurrence élevée mais avec délai
-const CONCURRENCY_HISTORY = 3;     // fenêtres traitées en parallèle
-const BATCH_DELAY_NORMAL  = 5000;  // 5s entre batches pour éviter rate limits
-const BATCH_DELAY_HISTORY = 10000; // 10s entre batches
+const CONCURRENCY_NORMAL  = 10;    // réduit à 10 pour éviter rate limits
+const CONCURRENCY_HISTORY = 2;     // fenêtres traitées en parallèle
+const BATCH_DELAY_NORMAL  = 3000;  // 3s entre batches
+const BATCH_DELAY_HISTORY = 8000;  // 8s entre batches
 
 const CHECKPOINT_EVERY = 200; // sauvegarde le checkpoint tous les 200 fenêtres (pour 2min windows)
 
