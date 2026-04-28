@@ -1,7 +1,9 @@
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
-const { execSync } = require('child_process');
 const fs = require('fs');
+
+// Fetch global (Node 18+)
+const fetch = global.fetch || require('node-fetch');
 
 // Cache local avec lowdb
 const adapter = new FileSync("speedruns.json");
@@ -24,31 +26,50 @@ async function backupToGitHub() {
   if (now - lastBackup < BACKUP_INTERVAL) return;
   
   try {
-    // Vérifier si le fichier a changé
-    const status = execSync('git status --porcelain speedruns.json', { encoding: 'utf8' });
+    const content = fs.readFileSync('speedruns.json', 'utf8');
+    const contentBase64 = Buffer.from(content).toString('base64');
     
-    if (!status.includes('speedruns.json')) {
-      return; // Pas de changement
-    }
+    // Essayer de récupérer le sha actuel (pour update)
+    const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/speedruns.json`;
+    let sha = null;
     
-    // Configurer git si premier backup
     try {
-      execSync('git config user.email "backup@speedrun.io"', { stdio: 'ignore' });
-      execSync('git config user.name "Auto Backup"', { stdio: 'ignore' });
+      const getRes = await fetch(apiUrl, {
+        headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+      });
+      if (getRes.ok) {
+        const fileData = await getRes.json();
+        sha = fileData.sha;
+      }
     } catch (e) {}
     
-    // Commit et push
-    execSync('git add speedruns.json');
-    execSync('git commit -m "[auto] backup: ' + db.get('runs').size().value() + ' runs"');
+    // Créer ou mettre à jour
+    const body = {
+      message: `[auto] backup: ${db.get('runs').size().value()} runs`,
+      content: contentBase64,
+      branch: 'main'
+    };
+    if (sha) body.sha = sha;
     
-    // Push avec le token
-    const remoteUrl = `https://${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git`;
-    execSync(`git push ${remoteUrl} main`, { stdio: 'ignore' });
+    const response = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`API ${response.status}: ${err}`);
+    }
     
     lastBackup = now;
-    console.log('[backup] ✅ Sauvegardé sur GitHub :', db.get('runs').size().value(), 'runs');
+    console.log('[backup] ✅ Sauvegardé sur GitHub (API) :', db.get('runs').size().value(), 'runs');
   } catch (e) {
-    console.log('[backup] Erreur:', e.message);
+    console.log('[backup] Erreur API:', e.message);
   }
 }
 
