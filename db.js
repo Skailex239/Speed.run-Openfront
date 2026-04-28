@@ -1,10 +1,62 @@
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
+const { execSync } = require('child_process');
+const fs = require('fs');
 
 // Cache local avec lowdb
 const adapter = new FileSync("speedruns.json");
 const db = low(adapter);
 db.defaults({ runs: [], seen_games: [], checkpoints: [] }).write();
+
+// ── GitHub Backup ─────────────────────────────────────────────────────────────
+
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_REPO = process.env.GITHUB_REPO || 'rapto/openfront-speedrun';
+const USE_GITHUB_BACKUP = !!GITHUB_TOKEN;
+
+let lastBackup = 0;
+const BACKUP_INTERVAL = 2 * 60 * 1000; // 2 minutes minimum entre backups
+
+async function backupToGitHub() {
+  if (!USE_GITHUB_BACKUP) return;
+  
+  const now = Date.now();
+  if (now - lastBackup < BACKUP_INTERVAL) return;
+  
+  try {
+    // Vérifier si le fichier a changé
+    const status = execSync('git status --porcelain speedruns.json', { encoding: 'utf8' });
+    
+    if (!status.includes('speedruns.json')) {
+      return; // Pas de changement
+    }
+    
+    // Configurer git si premier backup
+    try {
+      execSync('git config user.email "backup@speedrun.io"', { stdio: 'ignore' });
+      execSync('git config user.name "Auto Backup"', { stdio: 'ignore' });
+    } catch (e) {}
+    
+    // Commit et push
+    execSync('git add speedruns.json');
+    execSync('git commit -m "[auto] backup: ' + db.get('runs').size().value() + ' runs"');
+    
+    // Push avec le token
+    const remoteUrl = `https://${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git`;
+    execSync(`git push ${remoteUrl} main`, { stdio: 'ignore' });
+    
+    lastBackup = now;
+    console.log('[backup] ✅ Sauvegardé sur GitHub :', db.get('runs').size().value(), 'runs');
+  } catch (e) {
+    console.log('[backup] Erreur:', e.message);
+  }
+}
+
+// Backup périodique
+if (USE_GITHUB_BACKUP) {
+  setInterval(backupToGitHub, 60000); // Vérifie toutes les minutes
+  console.log('[backup] GitHub backup activé');
+}
 
 
 
