@@ -20,37 +20,60 @@ let lastBackup = 0;
 const BACKUP_INTERVAL = 2 * 60 * 1000; // 2 minutes minimum entre backups
 
 async function backupToGitHub() {
-  if (!USE_GITHUB_BACKUP) return;
+  if (!USE_GITHUB_BACKUP) {
+    console.log('[backup] Backup désactivé (pas de token)');
+    return;
+  }
   
   const now = Date.now();
-  if (now - lastBackup < BACKUP_INTERVAL) return;
+  if (now - lastBackup < BACKUP_INTERVAL) {
+    console.log('[backup] Interval pas atteint');
+    return;
+  }
   
   try {
+    // Vérifier si le fichier existe localement
+    if (!fs.existsSync('speedruns.json')) {
+      console.log('[backup] Fichier speedruns.json inexistant localement');
+      return;
+    }
+    
     const content = fs.readFileSync('speedruns.json', 'utf8');
+    const runs = db.get('runs').size().value();
+    console.log(`[backup] Fichier lu: ${content.length} bytes, ${runs} runs`);
+    
     const contentBase64 = Buffer.from(content).toString('base64');
     
     // Essayer de récupérer le sha actuel (pour update)
     const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/speedruns.json`;
     let sha = null;
     
+    console.log('[backup] Vérification fichier existant sur GitHub...');
     try {
       const getRes = await fetch(apiUrl, {
         headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
       });
+      console.log(`[backup] GET status: ${getRes.status}`);
       if (getRes.ok) {
         const fileData = await getRes.json();
         sha = fileData.sha;
+        console.log('[backup] Fichier existant, sha:', sha.slice(0, 8) + '...');
+      } else if (getRes.status === 404) {
+        console.log('[backup] Fichier inexistant, création...');
       }
-    } catch (e) {}
+    } catch (e) {
+      console.log('[backup] Erreur GET:', e.message);
+    }
     
     // Créer ou mettre à jour
     const body = {
-      message: `[auto] backup: ${db.get('runs').size().value()} runs`,
+      message: `[auto] backup: ${runs} runs`,
       content: contentBase64,
       branch: 'main'
     };
     if (sha) body.sha = sha;
     
+    console.log('[backup] Envoi vers GitHub API...');
     const response = await fetch(apiUrl, {
       method: 'PUT',
       headers: {
@@ -67,18 +90,21 @@ async function backupToGitHub() {
     }
     
     lastBackup = now;
-    console.log('[backup] ✅ Sauvegardé sur GitHub (API) :', db.get('runs').size().value(), 'runs');
+    console.log('[backup] ✅ Sauvegardé sur GitHub (API) :', runs, 'runs');
   } catch (e) {
-    console.log('[backup] Erreur API:', e.message);
+    console.log('[backup] ❌ Erreur API:', e.message);
   }
 }
 
 // Restaurer depuis GitHub au démarrage via API
 async function restoreFromGitHub() {
-  if (!USE_GITHUB_BACKUP) return;
+  if (!USE_GITHUB_BACKUP) {
+    console.log('[backup] Restore désactivé (pas de token)');
+    return;
+  }
   
   try {
-    // Utiliser l'API GitHub pour récupérer le fichier speedruns.json
+    console.log('[backup] Tentative de restauration depuis GitHub API...');
     const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/speedruns.json`;
     const response = await fetch(apiUrl, {
       headers: {
@@ -87,8 +113,14 @@ async function restoreFromGitHub() {
       }
     });
     
+    console.log(`[backup] GET restore status: ${response.status}`);
+    
     if (!response.ok) {
-      console.log('[backup] Fichier speedruns.json non trouvé sur GitHub');
+      if (response.status === 404) {
+        console.log('[backup] Fichier speedruns.json non trouvé sur GitHub (premier backup?)');
+      } else {
+        console.log('[backup] Erreur GET restore:', response.status);
+      }
       return;
     }
     
@@ -97,6 +129,7 @@ async function restoreFromGitHub() {
     
     // Écrire le fichier localement
     fs.writeFileSync('speedruns.json', content);
+    console.log(`[backup] Fichier écrit: ${content.length} bytes`);
     
     // Recharger la DB
     db.read();
