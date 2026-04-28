@@ -52,30 +52,39 @@ async function backupToGitHub() {
   }
 }
 
-// Restaurer depuis GitHub au démarrage
+// Restaurer depuis GitHub au démarrage via API
 async function restoreFromGitHub() {
   if (!USE_GITHUB_BACKUP) return;
   
   try {
-    // Configurer le remote avec token
-    const remoteUrl = `https://${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git`;
+    // Utiliser l'API GitHub pour récupérer le fichier speedruns.json
+    const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/speedruns.json`;
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
     
-    try {
-      execSync(`git remote set-url origin ${remoteUrl}`, { stdio: 'ignore' });
-    } catch (e) {}
+    if (!response.ok) {
+      console.log('[backup] Fichier speedruns.json non trouvé sur GitHub');
+      return;
+    }
     
-    // Fetch et reset hard pour écraser les changements locaux
-    execSync('git fetch origin main', { stdio: 'ignore' });
-    execSync('git reset --hard origin/main', { stdio: 'ignore' });
+    const data = await response.json();
+    const content = Buffer.from(data.content, 'base64').toString('utf8');
     
-    // Recharger la DB depuis le fichier
+    // Écrire le fichier localement
+    fs.writeFileSync('speedruns.json', content);
+    
+    // Recharger la DB
     db.read();
     
     const runs = db.get('runs').size().value();
     const checkpoints = db.get('checkpoints').size().value();
-    console.log('[backup] ✅ Restauré depuis GitHub :', runs, 'runs,', checkpoints, 'checkpoints');
+    console.log('[backup] ✅ Restauré depuis GitHub (API) :', runs, 'runs,', checkpoints, 'checkpoints');
   } catch (e) {
-    console.log('[backup] ⚠️ Pas de restauration (fichier local utilisé):', e.message);
+    console.log('[backup] ⚠️ Pas de restauration API:', e.message);
   }
 }
 
