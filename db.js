@@ -52,10 +52,38 @@ async function backupToGitHub() {
   }
 }
 
-// Backup périodique
+// Restaurer depuis GitHub au démarrage
+async function restoreFromGitHub() {
+  if (!USE_GITHUB_BACKUP) return;
+  
+  try {
+    // Configurer le remote avec token
+    const remoteUrl = `https://${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git`;
+    
+    try {
+      execSync(`git remote set-url origin ${remoteUrl}`, { stdio: 'ignore' });
+    } catch (e) {}
+    
+    // Pull les derniers changements
+    execSync('git pull origin main --ff-only', { stdio: 'ignore' });
+    
+    // Recharger la DB depuis le fichier
+    db.read();
+    
+    const runs = db.get('runs').size().value();
+    const checkpoints = db.get('checkpoints').size().value();
+    console.log('[backup] ✅ Restauré depuis GitHub :', runs, 'runs,', checkpoints, 'checkpoints');
+  } catch (e) {
+    console.log('[backup] Pas de restauration (fichier local utilisé):', e.message);
+  }
+}
+
+// Restaurer au démarrage, puis activer le backup périodique
 if (USE_GITHUB_BACKUP) {
-  setInterval(backupToGitHub, 60000); // Vérifie toutes les minutes
-  console.log('[backup] GitHub backup activé');
+  restoreFromGitHub().then(() => {
+    setInterval(backupToGitHub, 60000); // Vérifie toutes les minutes
+    console.log('[backup] GitHub backup activé');
+  });
 }
 
 
