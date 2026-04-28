@@ -13,7 +13,7 @@ db.defaults({ runs: [], seen_games: [], checkpoints: [] }).write();
 // ── GitHub Backup ─────────────────────────────────────────────────────────────
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const GITHUB_REPO = process.env.GITHUB_REPO || 'rapto/openfront-speedrun';
+const GITHUB_REPO = process.env.GITHUB_REPO || 'Skailex239/Speed.run-Openfront';
 const USE_GITHUB_BACKUP = !!GITHUB_TOKEN;
 
 let lastBackup = 0;
