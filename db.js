@@ -142,12 +142,20 @@ async function restoreFromGitHub() {
   }
 }
 
-// Restaurer au démarrage, puis activer le backup périodique
+// Restaurer au démarrage (non bloquant), puis activer le backup périodique
 if (USE_GITHUB_BACKUP) {
-  restoreFromGitHub().then(() => {
-    setInterval(backupToGitHub, 60000); // Vérifie toutes les minutes
-    console.log('[backup] GitHub backup activé');
-  });
+  // Lancer la restauration en background sans bloquer le serveur
+  setTimeout(() => {
+    restoreFromGitHub().then(() => {
+      console.log('[backup] Restauration terminée, activation du backup périodique');
+    }).catch(e => {
+      console.log('[backup] Erreur restauration (non bloquant):', e.message);
+    });
+  }, 5000); // Attendre 5s que le serveur démarre
+  
+  // Backup périodique indépendant
+  setInterval(backupToGitHub, 60000); // Vérifie toutes les minutes
+  console.log('[backup] GitHub backup activé (restauration en background)');
 }
 
 
