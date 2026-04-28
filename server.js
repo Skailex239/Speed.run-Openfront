@@ -486,8 +486,19 @@ app.listen(PORT, () => {
   // }
   
   setTimeout(async () => {
-    await syncMissed();
-    console.log("[boot] Sync historique...");
-    await syncHistory();
+    // 1. Sync normale d'abord (24h) - rapide, pour avoir des runs immédiatement
+    console.log("[boot] Sync normale (24h) pour runs récents...");
+    await syncSpeedruns();
+    
+    // 2. Sync historique en background (ne bloque pas)
+    console.log("[boot] Lancement sync historique en background...");
+    syncHistory().then(() => {
+      console.log("[boot] Historique terminé !");
+    }).catch(e => {
+      console.error("[boot] Erreur historique:", e.message);
+    });
+    
+    // 3. Sync des trous (missed) en background aussi
+    syncMissed().catch(e => console.error("[boot] Erreur missed:", e.message));
   }, 2000);
 });

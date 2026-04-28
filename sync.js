@@ -10,9 +10,9 @@ const TIME_OFFSET_SECS = 32;
 
 
 const CONCURRENCY_NORMAL  = 5;     // 5 requêtes max simultanées (conservateur)
-const CONCURRENCY_HISTORY = 2;     // 2 fenêtres en parallèle pour l'historique
+const CONCURRENCY_HISTORY = 1;     // 1 fenêtre à la fois (séquentiel, évite les 429)
 const BATCH_DELAY_NORMAL  = 2000;  // 2s entre batches (rapide mais safe)
-const BATCH_DELAY_HISTORY = 5000;  // 5s entre batches historiques
+const BATCH_DELAY_HISTORY = 3000;  // 3s entre fenêtres historiques (plus rapide)
 
 const CHECKPOINT_EVERY = 100; // checkpoint tous les 100 fenêtres
 
@@ -289,12 +289,13 @@ async function processGames(games, { concurrency = CONCURRENCY_NORMAL, batchDela
   return newRuns;
 }
 
-// ── Sync historique avec checkpoint (reprend où elle s'était arrêtée) ──────────
+// ── Sync historique (jusqu'à décembre 2025) ────────────────────────────────────
 async function syncHistory() {
-  const WINDOW_MS  = 2 * 60 * 1_000; // 2 minutes par fenêtre (couverture plus fine)
-  const HISTORY_MS = 120 * 24 * 60 * 60 * 1_000; // ~4 mois jusqu'à décembre 2025
+  const WINDOW_MS  = 2 * 60 * 1_000; // 2 minutes par fenêtre
+  // Cible : décembre 2025 = 2025-12-01
+  const TARGET_DATE = new Date('2025-12-01T00:00:00Z').getTime();
   const now    = Date.now();
-  const oldest = now - HISTORY_MS;
+  const oldest = TARGET_DATE;
 
   // Reprend depuis le checkpoint si existant, sinon part du présent
   const saved = getCheckpoint('history_oldest_reached');
@@ -480,14 +481,14 @@ async function syncMissed() {
   return totalRuns;
 }
 
-// ── Sync normale : fenêtre 12h ────────────────────────────────────────────────
+// ── Sync normale : fenêtre 24h ────────────────────────────────────────────────
 async function syncSpeedruns() {
   const globalStart = Date.now();
   console.log(`[sync] Démarrage — ${new Date().toISOString()}`);
   let newRuns = 0;
   try {
     const now       = new Date();
-    const threeHAgo = new Date(Date.now() - 12 * 60 * 60 * 1_000);
+    const threeHAgo = new Date(Date.now() - 24 * 60 * 60 * 1_000); // 24h de fenêtre
     const games     = await fetchGamesInWindow(threeHAgo, now);
     // console.log(`[sync] ${games.length} parties candidates`);
     newRuns = await processGames(games, {
