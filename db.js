@@ -64,8 +64,9 @@ async function restoreFromGitHub() {
       execSync(`git remote set-url origin ${remoteUrl}`, { stdio: 'ignore' });
     } catch (e) {}
     
-    // Pull les derniers changements
-    execSync('git pull origin main --ff-only', { stdio: 'ignore' });
+    // Fetch et reset hard pour écraser les changements locaux
+    execSync('git fetch origin main', { stdio: 'ignore' });
+    execSync('git reset --hard origin/main', { stdio: 'ignore' });
     
     // Recharger la DB depuis le fichier
     db.read();
@@ -74,7 +75,7 @@ async function restoreFromGitHub() {
     const checkpoints = db.get('checkpoints').size().value();
     console.log('[backup] ✅ Restauré depuis GitHub :', runs, 'runs,', checkpoints, 'checkpoints');
   } catch (e) {
-    console.log('[backup] Pas de restauration (fichier local utilisé):', e.message);
+    console.log('[backup] ⚠️ Pas de restauration (fichier local utilisé):', e.message);
   }
 }
 
