@@ -127,6 +127,12 @@ async function restoreFromGitHub() {
     const data = await response.json();
     const content = Buffer.from(data.content, 'base64').toString('utf8');
     
+    // Ne pas restaurer si fichier trop petit (vide ou corrompu)
+    if (content.length < 50) {
+      console.log(`[backup] Fichier GitHub trop petit (${content.length} bytes) - ignoré`);
+      return;
+    }
+    
     // Écrire le fichier localement
     fs.writeFileSync('speedruns.json', content);
     console.log(`[backup] Fichier écrit: ${content.length} bytes`);
