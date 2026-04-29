@@ -7,1462 +7,370 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-
-/* ════════════════════════════════════════════
-   TOKENS
-════════════════════════════════════════════ */
 :root {
-  --bg:       #08080f;
-  --bg2:      #0c0c16;
-  --card:     #10101c;
-  --card2:    #14141f;
-  --rim:      rgba(255,255,255,0.055);
-  --rim2:     rgba(255,255,255,0.10);
-  --rim3:     rgba(255,255,255,0.16);
-  --shine:    rgba(255,255,255,0.20);
-
-  --text:     #eeeeff;
-  --text2:    #8888aa;
-  --text3:    #48486a;
-
-  --blue:     #4b7fff;
-  --blueL:    #829dff;
-  --blueD:    #1a3fa0;
-  --blueG:    rgba(75,127,255,0.13);
-
-  --gold:     #f0c060;
-  --goldG:    rgba(240,192,96,0.10);
-  --silver:   #a0b0c4;
-  --bronze:   #c08840;
-
-  --green:    #3dd68c;
-  --greenG:   rgba(61,214,140,0.08);
-  --purple:   #9b7ff0;
-
-  --f:    'Outfit', sans-serif;
-  --mono: 'JetBrains Mono', monospace;
-  --r:    10px;
-  --rL:   14px;
+  --bg: #08080f; --bg2: #0c0c16; --card: #10101c; --card2: #14141f;
+  --rim: rgba(255,255,255,0.055); --rim2: rgba(255,255,255,0.10);
+  --text: #eeeeff; --text2: #8888aa; --text3: #48486a;
+  --blue: #4b7fff; --blueL: #829dff; --gold: #f0c060;
+  --silver: #a0b0c4; --bronze: #c08840; --green: #3dd68c;
+  --f: 'Outfit', sans-serif; --mono: 'JetBrains Mono', monospace;
+  --r: 10px;
 }
-
-/* ════════════════════════════════════════════
-   BASE
-════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--f);
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  background: var(--bg); color: var(--text); font-family: var(--f);
+  min-height: 100vh; -webkit-font-smoothing: antialiased;
 }
-
-/* Ambient glow */
 body::before {
-  content: '';
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background:
-    radial-gradient(ellipse 1100px 600px at 15% -5%,  rgba(75,127,255,0.07) 0%, transparent 70%),
-    radial-gradient(ellipse 800px 600px  at 90% 105%, rgba(155,127,240,0.05) 0%, transparent 70%);
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse 1100px 600px at 15% -5%, rgba(75,127,255,0.07) 0%, transparent 70%);
 }
-
-/* ════════════════════════════════════════════
-   NAV
-════════════════════════════════════════════ */
 nav {
-  position: sticky; top: 0; z-index: 300;
-  height: 54px;
+  position: sticky; top: 0; z-index: 300; height: 54px;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 44px;
-  background: rgba(8,8,15,0.88);
-  backdrop-filter: blur(20px);
+  padding: 0 44px; background: rgba(8,8,15,0.88); backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--rim);
 }
-
-.logo {
-  display: flex; align-items: center; gap: 9px;
-  text-decoration: none; color: var(--text);
-  font-size: 15px; font-weight: 700; letter-spacing: -0.2px;
-}
-.logo-mark {
-  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
-  background: linear-gradient(140deg, var(--blue) 0%, var(--blueD) 100%);
-  display: flex; align-items: center; justify-content: center; font-size: 14px;
-  box-shadow: 0 0 18px rgba(75,127,255,0.35), inset 0 1px 0 rgba(255,255,255,0.18);
-}
-.logo span { color: var(--blueL); }
-
+.logo { display: flex; align-items: center; gap: 9px; text-decoration: none; color: var(--text); font-size: 15px; font-weight: 700; }
+.logo-mark { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(140deg, var(--blue) 0%, #1a3fa0 100%); display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 0 18px rgba(75,127,255,0.35); }
 .nav-right { display: flex; align-items: center; gap: 8px; }
-
-.pill {
-  display: flex; align-items: center; gap: 6px;
-  padding: 5px 11px; border-radius: 100px;
-  background: var(--card); border: 1px solid var(--rim2);
-  font-family: var(--mono); font-size: 10px; color: var(--text3);
-}
-.pill-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--text3); transition: all .3s;
-}
-.pill-dot.on { background: var(--green); box-shadow: 0 0 8px var(--green); animation: glow-pulse 2.5s ease infinite; }
-@keyframes glow-pulse { 0%,100%{box-shadow:0 0 6px var(--green)} 50%{box-shadow:0 0 14px var(--green)} }
-
-.nbtn {
-  display: flex; align-items: center; gap: 5px;
-  padding: 7px 13px; border-radius: 8px;
-  font-family: var(--f); font-size: 12px; font-weight: 600;
-  cursor: pointer; border: none; transition: all .15s;
-}
-.nbtn-ghost {
-  background: transparent; border: 1px solid var(--rim2); color: var(--text2);
-}
-.nbtn-ghost:hover { border-color: var(--rim3); color: var(--text); }
-.nbtn-mono {
-  background: var(--card2); border: 1px solid var(--rim2);
-  color: var(--text2); font-family: var(--mono); font-size: 11px;
-}
-.nbtn-mono:hover { border-color: var(--blue); color: var(--blueL); }
-.nbtn-mono.syncing { border-color: var(--blue); color: var(--blueL); }
-.nbtn-prime {
-  background: var(--blue); color: #fff;
-  box-shadow: 0 0 18px rgba(75,127,255,0.3), inset 0 1px 0 rgba(255,255,255,0.14);
-}
-.nbtn-prime:hover { background: var(--blueL); box-shadow: 0 0 24px rgba(75,127,255,0.45); }
-
-@keyframes spin { to{ transform: rotate(360deg); } }
-.spin { display: inline-block; animation: spin .65s linear infinite; }
-
-/* ════════════════════════════════════════════
-   HERO
-════════════════════════════════════════════ */
-.hero {
-  position: relative; z-index: 1;
-  max-width: 1180px; margin: 0 auto;
-  padding: 68px 44px 52px;
-  display: grid; grid-template-columns: 1fr auto; gap: 56px; align-items: center;
-  border-bottom: 1px solid var(--rim);
-}
-
-.hero-eyebrow {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-family: var(--mono); font-size: 10px; color: var(--text3);
-  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 18px;
-}
-.hero-eyebrow-line {
-  display: block; width: 22px; height: 1px;
-  background: linear-gradient(90deg, var(--blue), transparent);
-}
-
-h1 {
-  font-size: clamp(38px, 5vw, 64px);
-  font-weight: 900; line-height: 1.0; letter-spacing: -2.5px;
-  margin-bottom: 18px;
-}
-h1 em {
-  font-style: normal;
-  background: linear-gradient(125deg, var(--blueL) 0%, var(--blue) 45%, var(--purple) 100%);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
-
-.hero-p {
-  font-size: 14px; font-weight: 400; line-height: 1.75;
-  color: var(--text2); max-width: 420px; margin-bottom: 30px;
-}
-
-.hero-btns { display: flex; gap: 10px; flex-wrap: wrap; }
-.hbtn {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 10px 20px; border-radius: var(--r);
-  font-family: var(--f); font-size: 13px; font-weight: 600;
-  text-decoration: none; cursor: pointer; border: none; transition: all .2s;
-}
-.hbtn-blue {
-  background: var(--blue); color: #fff;
-  box-shadow: 0 4px 22px rgba(75,127,255,0.35), inset 0 1px 0 rgba(255,255,255,0.14);
-}
-.hbtn-blue:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(75,127,255,0.5); }
-.hbtn-ghost {
-  background: var(--card); border: 1px solid var(--rim2); color: var(--text);
-}
-.hbtn-ghost:hover { border-color: var(--rim3); background: var(--card2); }
-
-/* Stat cards */
-.hero-stats { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
-.scard {
-  background: var(--card);
-  border: 1px solid var(--rim);
-  border-radius: var(--rL);
-  padding: 18px 26px; position: relative; overflow: hidden;
-  min-width: 190px;
-  transition: border-color .2s;
-}
-.scard:hover { border-color: var(--rim2); }
-.scard::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
-}
-.scard-val {
-  font-size: 30px; font-weight: 800; letter-spacing: -1.2px;
-  line-height: 1; margin-bottom: 4px;
-}
-.scard-val.c-blue  { color: var(--blueL); }
-.scard-val.c-green { color: var(--green); }
-.scard-val.c-text  { color: var(--text2); }
-.scard-lbl {
-  font-family: var(--mono); font-size: 9px; color: var(--text3);
-  text-transform: uppercase; letter-spacing: 2px;
-}
-.scard-glow {
-  position: absolute; top: -10px; right: -10px;
-  width: 70px; height: 70px; border-radius: 50%;
-  filter: blur(28px); opacity: 0.12;
-}
-
-/* ════════════════════════════════════════════
-   WRAP
-════════════════════════════════════════════ */
-.wrap {
-  position: relative; z-index: 1;
-  max-width: 1180px; margin: 0 auto;
-  padding: 52px 44px 120px;
-  display: flex; flex-direction: column; gap: 60px;
-}
-
-/* ════════════════════════════════════════════
-   SECTION
-════════════════════════════════════════════ */
-.s-top {
-  display: flex; align-items: flex-end; justify-content: space-between;
-  gap: 16px; margin-bottom: 18px; flex-wrap: wrap;
-}
-.s-label {
-  font-family: var(--mono); font-size: 9px; color: var(--blue);
-  letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 5px;
-}
-.s-title { font-size: 21px; font-weight: 700; letter-spacing: -0.4px; }
-.s-sub { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 3px; }
-
-/* Points legend */
-.pts-row { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
-.pt-pill {
-  font-family: var(--mono); font-size: 10px; color: var(--text3);
-  padding: 3px 8px; border: 1px solid var(--rim); border-radius: 5px;
-  background: var(--card2); line-height: 1.4;
-}
-.pt-pill b { color: var(--text); font-weight: 500; }
-
-/* ════════════════════════════════════════════
-   PANEL  (encadré blanc lumineux signature)
-════════════════════════════════════════════ */
-.panel {
-  background: var(--card);
-  border: 1px solid var(--rim2);
-  border-radius: var(--rL);
-  overflow: hidden; position: relative;
-  box-shadow:
-    inset 0 1px 0 var(--shine),
-    0 0 0 1px rgba(0,0,0,0.5),
-    0 20px 48px rgba(0,0,0,0.45);
-}
-/* top shine */
-.panel::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px; z-index: 2;
-  background: linear-gradient(90deg,
-    transparent 4%,
-    rgba(255,255,255,0.18) 28%,
-    rgba(255,255,255,0.24) 50%,
-    rgba(255,255,255,0.18) 72%,
-    transparent 96%
-  );
-}
-
-/* Panel toolbar */
-.p-bar {
-  display: flex; align-items: center; gap: 10px;
-  padding: 12px 18px; border-bottom: 1px solid var(--rim);
-  background: rgba(255,255,255,0.015);
-}
-
-/* ════════════════════════════════════════════
-   SEARCH
-════════════════════════════════════════════ */
-.sf { position: relative; }
-.sf input {
-  background: var(--bg2); border: 1px solid var(--rim2);
-  color: var(--text); padding: 8px 30px 8px 32px;
-  border-radius: 8px; font-family: var(--f); font-size: 13px;
-  outline: none; transition: border-color .15s, box-shadow .15s;
-  width: 100%;
-}
-.sf input::placeholder { color: var(--text3); }
-.sf input:focus { border-color: rgba(75,127,255,0.45); box-shadow: 0 0 0 3px rgba(75,127,255,0.07); }
-.sf-ico { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 14px; pointer-events: none; line-height: 1; }
-.sf-x {
-  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; color: var(--text3); cursor: pointer;
-  font-size: 13px; padding: 2px; display: none; transition: color .15s; line-height: 1;
-}
-.sf-x:hover { color: var(--text); }
-.sf-x.vis { display: block; }
-
-.cnt-badge {
-  font-family: var(--mono); font-size: 10px; color: var(--text3);
-  padding: 3px 9px; border: 1px solid var(--rim); border-radius: 5px;
-  background: var(--bg2); white-space: nowrap; flex-shrink: 0;
-}
-
-/* ════════════════════════════════════════════
-   TABLE HEADS
-════════════════════════════════════════════ */
-.t-head {
-  display: grid;
-  padding: 9px 20px;
-  border-bottom: 1px solid var(--rim);
-  font-family: var(--mono); font-size: 9px;
-  color: var(--text3); text-transform: uppercase; letter-spacing: 2px;
-}
-.th-rk { grid-template-columns: 52px 1fr 96px 130px 76px; }
-
-/* ════════════════════════════════════════════
-   RANKING ROW
-════════════════════════════════════════════ */
-.rk-row {
-  display: grid; grid-template-columns: 52px 1fr 96px 130px 76px;
-  align-items: center; padding: 0 20px; min-height: 54px;
-  border-bottom: 1px solid var(--rim);
-  transition: background .1s; animation: up .26s ease both; cursor: pointer;
-}
-.rk-row:last-child { border-bottom: none; }
-.rk-row:hover { background: rgba(255,255,255,0.022); }
-.rk-row.k1 { background: linear-gradient(90deg, rgba(240,192,96,0.06) 0%, transparent 52%); }
-.rk-row.k1:hover { background: linear-gradient(90deg, rgba(240,192,96,0.09) 0%, transparent 52%); }
-.rk-row.k2 { background: linear-gradient(90deg, rgba(160,176,196,0.04) 0%, transparent 52%); }
-.rk-row.k3 { background: linear-gradient(90deg, rgba(192,136,64,0.04) 0%, transparent 52%); }
-
-@keyframes up { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
-
-.rk-rank { display: flex; align-items: center; }
-.rk-emoji { font-size: 19px; line-height: 1; }
-.rk-num { font-family: var(--mono); font-size: 12px; color: var(--text3); }
-.k1 .rk-num { color: var(--gold); }
-.k2 .rk-num { color: var(--silver); }
-.k3 .rk-num { color: var(--bronze); }
-
-.rk-name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.k1 .rk-name { color: #fff; }
-
-.rk-pts {
-  display: flex; align-items: baseline; gap: 3px;
-  font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--blueL);
-}
-.k1 .rk-pts { color: var(--gold); text-shadow: 0 0 12px rgba(240,192,96,0.22); }
-.k2 .rk-pts { color: var(--silver); }
-.k3 .rk-pts { color: var(--bronze); }
-.rk-u { font-size: 10px; color: var(--text3); font-weight: 400; }
-
-.chips { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
-.chip {
-  display: inline-flex; align-items: center; gap: 2px;
-  font-family: var(--mono); font-size: 10px;
-  padding: 2px 6px; border-radius: 4px;
-}
-.chip-g { background: rgba(240,192,96,0.08); color: var(--gold); border: 1px solid rgba(240,192,96,0.16); }
-.chip-s { background: rgba(160,176,196,0.08); color: var(--silver); border: 1px solid rgba(160,176,196,0.16); }
-.chip-b { background: rgba(192,136,64,0.08); color: var(--bronze); border: 1px solid rgba(192,136,64,0.16); }
-
-.rk-maps { font-family: var(--mono); font-size: 11px; color: var(--text3); }
-.rk-row mark { background: none; color: var(--blueL); font-weight: 700; }
-
-.t-empty, .t-load {
-  padding: 44px; text-align: center;
-  color: var(--text3); font-family: var(--mono); font-size: 11px;
-}
-.t-load { animation: fade-p 1.6s ease infinite; }
-@keyframes fade-p { 0%,100%{opacity:.25} 50%{opacity:.75} }
-
-/* ════════════════════════════════════════════
-   FEED
-════════════════════════════════════════════ */
-.feed-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 13px 18px; border-bottom: 1px solid var(--rim);
-}
-.feed-bar-l { display: flex; align-items: center; gap: 9px; }
-.feed-bar-title { font-size: 13px; font-weight: 600; }
-.live-tag {
-  display: flex; align-items: center; gap: 5px;
-  padding: 3px 9px; border-radius: 100px;
-  border: 1px solid rgba(61,214,140,0.18);
-  background: var(--greenG);
-  font-family: var(--mono); font-size: 9px; color: var(--green);
-  letter-spacing: 1.5px; text-transform: uppercase;
-}
-.live-pip { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: fade-p 1.5s ease infinite; }
-
-.feed-row {
-  display: flex; align-items: center; gap: 13px;
-  padding: 11px 18px; border-bottom: 1px solid var(--rim);
-  transition: background .1s; animation: up .24s ease both;
-}
-.feed-row:last-child { border-bottom: none; }
-.feed-row:hover { background: rgba(255,255,255,0.018); }
-.f-ico { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
-.f-info { flex: 1; min-width: 0; }
-.f-player {
-  font-size: 13px; font-weight: 600;
-  display: flex; align-items: center; gap: 7px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.f-meta { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 2px; }
-.f-time { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--blueL); flex-shrink: 0; }
-.f-link {
-  display: flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; border-radius: 6px;
-  border: 1px solid var(--rim2); color: var(--text3);
-  text-decoration: none; font-size: 11px; transition: all .15s; flex-shrink: 0;
-}
-.f-link:hover { border-color: var(--blue); color: var(--blueL); }
-.f-empty { padding: 28px; text-align: center; color: var(--text3); font-family: var(--mono); font-size: 11px; }
-
-.badge-new {
-  display: inline-flex; align-items: center;
-  background: rgba(155,127,240,0.08); border: 1px solid rgba(155,127,240,0.2);
-  color: var(--purple); padding: 1px 6px; border-radius: 100px;
-  font-family: var(--mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase; flex-shrink: 0;
-}
-
-/* ════════════════════════════════════════════
-   PLAYER MODAL
-════════════════════════════════════════════ */
-.ov {
-  position: fixed; inset: 0; z-index: 600;
-  background: rgba(6,6,14,0.90); backdrop-filter: blur(18px);
-  display: flex; align-items: center; justify-content: center; padding: 24px;
-  opacity: 0; pointer-events: none; transition: opacity .18s;
-}
-.ov.on { opacity: 1; pointer-events: all; }
-
-.pm {
-  background: var(--card);
-  border: 1px solid var(--rim2);
-  border-radius: 16px;
-  width: 100%; max-width: 520px; max-height: 86vh;
-  display: flex; flex-direction: column;
-  transform: translateY(12px) scale(.99); transition: transform .2s;
-  box-shadow: inset 0 1px 0 var(--shine), 0 40px 80px rgba(0,0,0,.85);
-  position: relative; overflow: hidden;
-}
-.pm::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px; z-index: 2;
-  background: linear-gradient(90deg, transparent 4%, rgba(255,255,255,0.2) 28%, rgba(255,255,255,0.26) 50%, rgba(255,255,255,0.2) 72%, transparent 96%);
-}
-.ov.on .pm { transform: translateY(0) scale(1); }
-
-.pm-head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 22px 16px; border-bottom: 1px solid var(--rim); flex-shrink: 0;
-}
-.pm-id { display: flex; align-items: center; gap: 12px; }
-.pm-av {
-  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-  background: linear-gradient(140deg, var(--blue), var(--blueD));
-  display: flex; align-items: center; justify-content: center;
-  font-size: 17px; font-weight: 700; color: #fff;
-  box-shadow: 0 0 18px rgba(75,127,255,0.3), inset 0 1px 0 rgba(255,255,255,0.18);
-}
-.pm-name { font-size: 17px; font-weight: 700; letter-spacing: -0.2px; }
-.pm-sub { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 2px; }
-.pm-close {
-  background: none; border: 1px solid var(--rim2); color: var(--text3);
-  width: 30px; height: 30px; border-radius: 7px; cursor: pointer; font-size: 14px;
-  display: flex; align-items: center; justify-content: center; transition: all .15s;
-}
-.pm-close:hover { border-color: var(--rim3); color: var(--text); }
-
-.pm-stats { display: flex; border-bottom: 1px solid var(--rim); flex-shrink: 0; }
-.pm-stat { flex: 1; padding: 14px 18px; text-align: center; border-right: 1px solid var(--rim); }
-.pm-stat:last-child { border-right: none; }
-.pm-sv { font-family: var(--mono); font-size: 21px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
-.pm-sv.bl { color: var(--blueL); }
-.pm-sv.go { color: var(--gold); }
-.pm-sl { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; }
-
-.pm-list { overflow-y: auto; flex: 1; }
-.pm-list::-webkit-scrollbar { width: 3px; }
-.pm-list::-webkit-scrollbar-thumb { background: var(--rim2); border-radius: 2px; }
-.pm-row {
-  display: grid; grid-template-columns: 42px 1fr 80px 78px 30px;
-  align-items: center; padding: 9px 18px;
-  border-bottom: 1px solid var(--rim); transition: background .1s;
-}
-.pm-row:last-child { border-bottom: none; }
-.pm-row:hover { background: rgba(255,255,255,0.018); }
-.pm-pos { font-size: 17px; text-align: center; line-height: 1; }
-.pm-pos-n { font-family: var(--mono); font-size: 11px; color: var(--text3); text-align: center; }
-.pm-mn { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pm-t { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--blueL); }
-.t1 { color: var(--gold); } .t2 { color: var(--silver); } .t3 { color: var(--bronze); }
-.pm-d { font-family: var(--mono); font-size: 10px; color: var(--text3); }
-.pm-go {
-  display: flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; border-radius: 6px;
-  border: 1px solid var(--rim2); color: var(--text3);
-  text-decoration: none; font-size: 10px; transition: all .15s;
-}
-.pm-go:hover { border-color: var(--blue); color: var(--blueL); }
-
-/* ════════════════════════════════════════════
-   FORM MODAL
-════════════════════════════════════════════ */
-.ov-form {
-  position: fixed; inset: 0; z-index: 500;
-  background: rgba(6,6,14,0.87); backdrop-filter: blur(14px);
-  display: flex; align-items: center; justify-content: center; padding: 24px;
-  opacity: 0; pointer-events: none; transition: opacity .18s;
-}
-.ov-form.on { opacity: 1; pointer-events: all; }
-.fp {
-  background: var(--card); border: 1px solid var(--rim2); border-radius: 16px;
-  padding: 34px; width: 100%; max-width: 430px;
-  transform: translateY(12px); transition: transform .2s;
-  box-shadow: inset 0 1px 0 var(--shine), 0 40px 80px rgba(0,0,0,.8);
-  position: relative;
-}
-.fp::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent 4%, rgba(255,255,255,0.2) 28%, rgba(255,255,255,0.26) 50%, rgba(255,255,255,0.2) 72%, transparent 96%);
-  border-radius: 16px 16px 0 0;
-}
-.ov-form.on .fp { transform: translateY(0); }
-.fp h3 { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px; }
-.fp-sub { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-bottom: 26px; }
-.field { margin-bottom: 13px; }
-.field label {
-  display: block; font-family: var(--mono); font-size: 9px; font-weight: 500;
-  text-transform: uppercase; letter-spacing: 2px; color: var(--text3); margin-bottom: 6px;
-}
-.field input, .field select {
-  width: 100%; padding: 9px 12px;
-  background: var(--bg2); border: 1px solid var(--rim2);
-  border-radius: 8px; color: var(--text);
-  font-family: var(--f); font-size: 13px; outline: none;
-  transition: border-color .15s, box-shadow .15s;
-}
-.field input:focus, .field select:focus {
-  border-color: rgba(75,127,255,0.4); box-shadow: 0 0 0 3px rgba(75,127,255,0.07);
-}
-.field select option { background: #0c0c16; }
-.f2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.f-err { color: #f87171; font-family: var(--mono); font-size: 10px; margin-top: 8px; }
-.fp-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
-
-/* ════════════════════════════════════════════
-   FOOTER
-════════════════════════════════════════════ */
-footer {
-  position: relative; z-index: 1;
-  border-top: 1px solid var(--rim);
-  padding: 20px 44px;
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 10px;
-  font-family: var(--mono); font-size: 10px; color: var(--text3);
-}
-footer a { color: var(--text3); text-decoration: none; transition: color .15s; }
-footer a:hover { color: var(--blueL); }
-
-/* ════════════════════════════════════════════
-   RESPONSIVE
-════════════════════════════════════════════ */
-@media (max-width: 920px) {
-  nav { padding: 0 20px; }
-  .hero { grid-template-columns: 1fr; padding: 40px 20px 36px; gap: 24px; border-bottom: none; }
-  .hero-stats { flex-direction: row; flex-wrap: wrap; }
-  .scard { flex: 1; min-width: 130px; }
-  .wrap { padding: 32px 20px 80px; gap: 44px; }
-  .th-rk, .rk-row { grid-template-columns: 46px 1fr 82px 108px; }
-  .rk-maps { display: none; }
-  .pm-row { grid-template-columns: 38px 1fr 76px 28px; }
-  .pm-d { display: none; }
-  footer { padding: 16px 20px; }
-}
-
-/* ════════════════════════════════════════════
-   LEADERBOARD PAR CARTE
-════════════════════════════════════════════ */
-.lb-layout {
-  display: grid; grid-template-columns: 260px 1fr; gap: 20px; align-items: start;
-}
-@media(max-width:920px) { .lb-layout { grid-template-columns: 1fr; } }
-
-/* Map list sidebar */
-.map-list {
-  background: var(--card); border: 1px solid var(--rim2);
-  border-radius: var(--rL); overflow: hidden; position: relative;
-  box-shadow: inset 0 1px 0 var(--shine), 0 0 0 1px rgba(0,0,0,.5), 0 12px 32px rgba(0,0,0,.4);
-  max-height: 480px; display: flex; flex-direction: column;
-}
-.map-list::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px; z-index: 2;
-  background: linear-gradient(90deg, transparent 4%, rgba(255,255,255,0.18) 28%, rgba(255,255,255,0.24) 50%, rgba(255,255,255,0.18) 72%, transparent 96%);
-}
-.map-list-head {
-  padding: 11px 16px; border-bottom: 1px solid var(--rim);
-  font-family: var(--mono); font-size: 9px; color: var(--text3);
-  text-transform: uppercase; letter-spacing: 2px; flex-shrink: 0;
-}
-.map-list-search {
-  padding: 8px 12px; border-bottom: 1px solid var(--rim); flex-shrink: 0;
-}
-.map-list-search input {
-  width: 100%; background: var(--bg2); border: 1px solid var(--rim2);
-  color: var(--text); padding: 6px 10px 6px 28px;
-  border-radius: 6px; font-family: var(--f); font-size: 12px; outline: none;
-  transition: border-color .15s;
-}
-.map-list-search input:focus { border-color: rgba(75,127,255,.4); }
-.map-list-search .sf-ico { top: 50%; left: 10px; font-size: 12px; }
-.map-scroll { overflow-y: auto; flex: 1; }
-.map-scroll::-webkit-scrollbar { width: 3px; }
-.map-scroll::-webkit-scrollbar-thumb { background: var(--rim2); }
-.map-item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 16px; border-bottom: 1px solid var(--rim);
-  cursor: pointer; transition: background .1s; gap: 8px;
-}
-.map-item:last-child { border-bottom: none; }
-.map-item:hover { background: rgba(255,255,255,.028); }
-.map-item.active {
-  background: var(--blueG);
-  border-left: 2px solid var(--blue);
-  padding-left: 14px;
-}
-.map-item-name { font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.map-item.active .map-item-name { color: var(--blueL); }
-.map-item-best { font-family: var(--mono); font-size: 10px; color: var(--text3); flex-shrink: 0; }
-.map-item mark { background: none; color: var(--blueL); font-weight: 700; }
-
-/* Leaderboard panel */
-.lb-panel {
-  background: var(--card); border: 1px solid var(--rim2);
-  border-radius: var(--rL); overflow: hidden; position: relative;
-  box-shadow: inset 0 1px 0 var(--shine), 0 0 0 1px rgba(0,0,0,.5), 0 20px 48px rgba(0,0,0,.45);
-}
-.lb-panel::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px; z-index: 2;
-  background: linear-gradient(90deg, transparent 4%, rgba(255,255,255,0.18) 28%, rgba(255,255,255,0.24) 50%, rgba(255,255,255,0.18) 72%, transparent 96%);
-}
-.lb-head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 20px; border-bottom: 1px solid var(--rim);
-  background: rgba(255,255,255,.012);
-}
-.lb-head-title { font-size: 16px; font-weight: 700; letter-spacing: -0.2px; }
-.lb-head-meta { font-family: var(--mono); font-size: 10px; color: var(--text3); }
-
-.th-lb { grid-template-columns: 52px 1fr 120px 100px 36px; }
-.lb-row {
-  display: grid; grid-template-columns: 52px 1fr 120px 100px 36px;
-  align-items: center; padding: 0 20px; min-height: 58px;
-  border-bottom: 1px solid var(--rim);
-  transition: background .1s; animation: up .22s ease both; position: relative;
-}
-.lb-row:last-child { border-bottom: none; }
-.lb-row:hover { background: rgba(255,255,255,.022); }
-.lb-row.p1 {
-  background: linear-gradient(90deg, rgba(240,192,96,0.07) 0%, transparent 55%);
-}
-.lb-row.p1::after {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-  background: linear-gradient(180deg, var(--gold), rgba(240,192,96,0));
-}
-.lb-row.p2 { background: linear-gradient(90deg, rgba(160,176,196,0.04) 0%, transparent 55%); }
-.lb-row.p3 { background: linear-gradient(90deg, rgba(192,136,64,0.04) 0%, transparent 55%); }
-
-.lb-rank { display: flex; align-items: center; }
-.lb-medal { font-size: 20px; line-height: 1; }
-.lb-num { font-family: var(--mono); font-size: 12px; color: var(--text3); }
-.p1 .lb-num { color: var(--gold); }
-.p2 .lb-num { color: var(--silver); }
-.p3 .lb-num { color: var(--bronze); }
-
-.lb-player { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.lb-pname { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.p1 .lb-pname { color: #fff; }
-
-.badge-new {
-  display: inline-flex; align-items: center;
-  background: rgba(155,127,240,0.08); border: 1px solid rgba(155,127,240,0.2);
-  color: var(--purple); padding: 1px 6px; border-radius: 100px;
-  font-family: var(--mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase; flex-shrink: 0;
-}
-
-.lb-time { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--blueL); }
-.p1 .lb-time { color: var(--gold); text-shadow: 0 0 14px rgba(240,192,96,0.2); }
-.p2 .lb-time { color: var(--silver); }
-.p3 .lb-time { color: var(--bronze); }
-.lb-date { font-family: var(--mono); font-size: 10px; color: var(--text3); }
-.lb-link-col { display: flex; justify-content: flex-end; }
-.lb-go {
-  display: flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; border-radius: 6px;
-  border: 1px solid var(--rim2); color: var(--text3);
-  text-decoration: none; font-size: 11px; transition: all .15s;
-}
-.lb-go:hover { border-color: var(--blue); color: var(--blueL); }
-
-@media(max-width:920px) {
-  .th-lb, .lb-row { grid-template-columns: 44px 1fr 108px 0 0; }
-  .lb-date, .lb-link-col, .th-lb *:nth-child(4), .th-lb *:nth-child(5) { display: none; }
-}
-
-
-/* Top selector */
-.top-opts { display: flex; gap: 4px; }
-.top-opt {
-  padding: 4px 10px; border-radius: 6px;
-  border: 1px solid var(--rim2); color: var(--text3);
-  font-family: var(--mono); font-size: 10px; font-weight: 500;
-  background: transparent; cursor: pointer; transition: all .15s;
-}
-.top-opt:hover { border-color: var(--blue); color: var(--blueL); }
-.top-opt.active { border-color: var(--blue); color: var(--blueL); background: var(--blueG); }
-
-
-/* ════════════════════════════════════════════
-   SETTINGS WIDGET (coin bas-droite)
-════════════════════════════════════════════ */
-.sw-fab {
-  position: fixed; bottom: 24px; right: 24px; z-index: 800;
-  width: 44px; height: 44px; border-radius: 12px;
-  background: var(--card); border: 1px solid var(--rim2);
-  color: var(--text2); font-size: 18px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all .2s;
-  box-shadow: 0 4px 20px rgba(0,0,0,.5), inset 0 1px 0 var(--shine);
-}
-.sw-fab:hover { border-color: var(--accent); color: var(--accentL); transform: scale(1.06); }
-
-.sw-panel {
-  position: fixed; bottom: 78px; right: 24px; z-index: 799;
-  width: 240px;
-  background: var(--card); border: 1px solid var(--rim2);
-  border-radius: 16px; padding: 20px;
-  box-shadow: 0 12px 48px rgba(0,0,0,.7), inset 0 1px 0 var(--shine);
-  transform: scale(.94) translateY(8px);
-  transform-origin: bottom right;
-  opacity: 0; pointer-events: none;
-  transition: opacity .18s, transform .18s;
-}
-.sw-panel.open { opacity: 1; pointer-events: all; transform: scale(1) translateY(0); }
-.sw-panel::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent 8%, rgba(255,255,255,0.18) 40%, rgba(255,255,255,0.22) 60%, transparent 92%);
-  border-radius: 16px 16px 0 0;
-}
-
-.sw-section-lbl {
-  font-family: var(--mono); font-size: 9px; color: var(--text3);
-  text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;
-}
-.sw-divider { height: 1px; background: var(--rim); margin: 16px 0; }
-
-/* Theme toggle */
-.sw-theme-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.sw-theme-btn {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 8px 10px; border-radius: 8px;
-  border: 1px solid var(--rim2); color: var(--text2);
-  background: transparent; font-family: var(--f); font-size: 12px; font-weight: 500;
-  cursor: pointer; transition: all .15s;
-}
-.sw-theme-btn:hover { border-color: var(--rim3); color: var(--text); }
-.sw-theme-btn.active { border-color: var(--accent); color: var(--accentL); background: rgba(75,127,255,0.08); }
-.sw-swatch { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); }
-.swatch-dark  { background: #08080f; }
-.swatch-light { background: #f0f4ff; }
-
-/* Color palette */
-.sw-colors { display: flex; gap: 7px; flex-wrap: wrap; }
-.sw-color {
-  width: 28px; height: 28px; border-radius: 8px;
-  cursor: pointer; border: 2px solid transparent;
-  transition: all .15s; flex-shrink: 0;
-  position: relative;
-}
-.sw-color:hover { transform: scale(1.12); }
-.sw-color.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.3); }
-.sw-color.active::after {
-  content: '✓';
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; color: #fff; font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0,0,0,.6);
-}
-
+.pill { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: var(--card); border: 1px solid var(--rim); font-size: 12px; color: var(--text2); cursor: pointer; transition: all .2s ease; }
+.pill:hover { border-color: var(--rim2); color: var(--text); }
+main { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 28px 24px 64px; }
+h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+h1 span { color: var(--blueL); }
+.subtitle { color: var(--text2); font-size: 15px; margin-bottom: 28px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 28px; }
+.stat-card { background: var(--card); border: 1px solid var(--rim); border-radius: var(--r); padding: 18px 16px; }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--blueL); }
+.stat-label { font-size: 12px; color: var(--text2); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.content { display: grid; grid-template-columns: 320px 1fr; gap: 24px; }
+@media (max-width: 900px) { .content { grid-template-columns: 1fr; } }
+.sidebar { display: flex; flex-direction: column; gap: 20px; }
+.panel { background: var(--card); border: 1px solid var(--rim); border-radius: var(--r); overflow: hidden; }
+.panel-header { padding: 14px 16px; border-bottom: 1px solid var(--rim); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); }
+.map-list { max-height: 500px; overflow-y: auto; }
+.map-item { padding: 12px 16px; border-bottom: 1px solid var(--rim); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background .15s; }
+.map-item:hover, .map-item.active { background: var(--card2); }
+.map-name { font-weight: 500; font-size: 14px; }
+.map-count { font-size: 12px; color: var(--text3); background: var(--bg2); padding: 2px 8px; border-radius: 999px; }
+.search-box { padding: 12px 16px; border-bottom: 1px solid var(--rim); }
+.search-box input { width: 100%; background: var(--bg2); border: 1px solid var(--rim); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: var(--f); font-size: 14px; outline: none; }
+.search-box input:focus { border-color: var(--blue); }
+.main-panel { background: var(--card); border: 1px solid var(--rim); border-radius: var(--r); }
+.leaderboard-header { padding: 20px 24px; border-bottom: 1px solid var(--rim); }
+.leaderboard-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.leaderboard-meta { font-size: 13px; color: var(--text2); }
+.leaderboard { padding: 0; }
+.run-row { display: grid; grid-template-columns: 50px 1fr 100px 100px; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--rim); transition: background .15s; }
+.run-row:hover { background: var(--card2); }
+.run-rank { font-family: var(--mono); font-weight: 700; font-size: 16px; color: var(--text3); }
+.run-rank.gold { color: var(--gold); }
+.run-rank.silver { color: var(--silver); }
+.run-rank.bronze { color: var(--bronze); }
+.run-player { font-weight: 600; font-size: 15px; }
+.run-time { font-family: var(--mono); font-weight: 700; font-size: 15px; color: var(--blueL); text-align: right; }
+.run-date { font-size: 12px; color: var(--text3); text-align: right; }
+.feed-panel { margin-top: 24px; }
+.feed-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--rim); }
+.feed-rank { width: 28px; height: 28px; border-radius: 50%; background: var(--bg2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+.feed-rank.top3 { background: var(--goldG); color: var(--gold); }
+.feed-info { flex: 1; }
+.feed-player { font-weight: 600; font-size: 14px; }
+.feed-map { font-size: 12px; color: var(--text2); }
+.feed-time { font-family: var(--mono); font-weight: 600; color: var(--green); }
+.empty-state { padding: 60px 40px; text-align: center; color: var(--text2); }
+.empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+.loading { padding: 40px; text-align: center; color: var(--text2); }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.rankings-panel { margin-top: 24px; }
+.ranking-row { display: grid; grid-template-columns: 40px 1fr 80px 80px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--rim); }
+.ranking-pos { font-family: var(--mono); font-weight: 700; color: var(--text3); }
+.ranking-pos.top3 { color: var(--gold); }
+.ranking-player { font-weight: 500; }
+.ranking-maps { font-size: 12px; color: var(--text2); text-align: right; }
+.ranking-wins { font-family: var(--mono); font-weight: 600; color: var(--blueL); text-align: right; }
+.last-update { text-align: center; padding: 20px; color: var(--text3); font-size: 12px; }
 </style>
 </head>
 <body>
-
-<!-- NAV -->
 <nav>
-  <a class="logo" href="#">
+  <a class="logo" href="/">
     <div class="logo-mark">⚡</div>
-    OpenFront<span>.runs</span>
+    <span>OpenFront</span> Runs
   </a>
   <div class="nav-right">
-    <div class="pill">
-      <div class="pill-dot" id="pill-dot"></div>
-      <span id="pill-txt">Connexion…</span>
+    <div class="pill" onclick="refreshData()">
+      <span id="sync-icon">↻</span>
+      <span id="sync-text">Sync auto (10min)</span>
     </div>
-    <button class="nbtn nbtn-mono" id="btn-sync" onclick="triggerSync()">
-      <span id="sync-ico">↻</span> Sync
-    </button>
-    <button class="nbtn nbtn-prime" onclick="openForm()">+ Run</button>
   </div>
 </nav>
 
-<!-- HERO -->
-<div class="hero">
-  <div>
-    <div class="hero-eyebrow">
-      <span class="hero-eyebrow-line"></span>
-      Community leaderboard · OpenFront.io
+<main>
+  <h1>Speedrun <span>Leaderboard</span></h1>
+  <p class="subtitle">Classement FFA des victoires OpenFront — Toutes difficultés, 10+ joueurs</p>
+  
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-value" id="stat-runs">-</div>
+      <div class="stat-label">Runs total</div>
     </div>
-    <h1>Conquer the world.<br><em>Faster than anyone.</em></h1>
-    <p class="hero-p">
-      Parties FFA récupérées automatiquement depuis l'API officielle.
-      10+ joueurs, Easy / Medium / Hard — ton record apparaît immédiatement.
-    </p>
-    <div class="hero-btns">
-      <a class="hbtn hbtn-blue" href="https://openfront.io" target="_blank">🎮 Jouer à OpenFront</a>
-      <button class="hbtn hbtn-ghost" onclick="openForm()">+ Soumettre un run</button>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-maps">-</div>
+      <div class="stat-label">Cartes</div>
     </div>
-  </div>
-
-  <div class="hero-stats">
-    <div class="scard">
-      <div class="scard-val c-blue" id="stat-runs">—</div>
-      <div class="scard-lbl">Runs enregistrés</div>
-      <div class="scard-glow" style="background:var(--blue)"></div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-players">-</div>
+      <div class="stat-label">Joueurs</div>
     </div>
-    <div class="scard" style="margin-top:2px">
-      <div class="scard-val c-green" id="stat-players">—</div>
-      <div class="scard-lbl">Joueurs uniques</div>
-      <div class="scard-glow" style="background:var(--green)"></div>
-    </div>
-    <div class="scard" style="margin-top:2px">
-      <div class="scard-val c-text" id="stat-maps">—</div>
-      <div class="scard-lbl">Cartes couvertes</div>
-    </div>
-  </div>
-</div>
-
-<!-- WRAP -->
-<div class="wrap">
-
-  <!-- Leaderboard par carte -->
-  <div>
-    <div class="s-top">
-      <div>
-        <div class="s-label">Leaderboard</div>
-        <div class="s-title">Records par carte</div>
-        <div class="s-sub">Top 5 · meilleur run par joueur · trié par temps</div>
-      </div>
-      <button class="nbtn nbtn-mono" onclick="triggerSync()" style="height:34px">↻ Actualiser</button>
-    </div>
-    <div class="lb-layout">
-      <!-- Sidebar cartes -->
-      <div class="map-list">
-        <div class="map-list-head">Cartes (<span id="map-count">—</span>)</div>
-        <div class="map-list-search" style="position:relative">
-          <span class="sf-ico">⌕</span>
-          <input id="map-filter" placeholder="Filtrer…" oninput="filterMaps(this.value)" autocomplete="off">
-        </div>
-        <div class="map-scroll" id="map-scroll"></div>
-      </div>
-      <!-- Panneau scores -->
-      <div class="lb-panel">
-        <div class="lb-head">
-          <span class="lb-head-title" id="lb-map-title">Sélectionner une carte</span>
-          <span class="lb-head-meta" id="lb-map-meta"></span>
-        </div>
-        <div class="t-head th-lb">
-          <span>#</span><span>Joueur</span><span>Temps</span><span>Date</span><span></span>
-        </div>
-        <div id="lb-body"><div class="t-load">Choisissez une carte</div></div>
-      </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-best">-</div>
+      <div class="stat-label">Meilleur temps</div>
     </div>
   </div>
 
-  <!-- Classement Global -->
-  <div>
-    <div class="s-top">
-      <div>
-        <div class="s-label">Classement</div>
-        <div class="s-title">Classement Global</div>
-        <div class="s-sub">Points cumulés · 1 meilleur run par joueur par carte · cliquer pour voir le profil</div>
-      </div>
-      <div class="pts-row">
-        <span class="pt-pill">🥇 <b>10</b> pts</span>
-        <span class="pt-pill">🥈 <b>5</b> pts</span>
-        <span class="pt-pill">🥉 <b>3</b> pts</span>
-        <span class="pt-pill">4e <b>2</b> pts</span>
-        <span class="pt-pill">5e <b>1</b> pt</span>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="p-bar">
-        <div class="sf" style="flex:1;max-width:280px">
-          <span class="sf-ico">⌕</span>
-          <input type="text" id="rk-search" placeholder="Rechercher un joueur…"
-            autocomplete="off" oninput="filterRk(this.value)">
-          <button class="sf-x" id="rk-clear" onclick="clearRk()">✕</button>
+  <div class="content">
+    <div class="sidebar">
+      <div class="panel">
+        <div class="panel-header">Cartes</div>
+        <div class="search-box">
+          <input type="text" id="map-search" placeholder="Rechercher une carte..." oninput="filterMaps()">
         </div>
-        <span class="cnt-badge" id="rk-count"></span>
-        <div class="top-opts">
-          <button class="top-opt active" id="top-5"   onclick="setRkTop(5)">Top 5</button>
-          <button class="top-opt"        id="top-10"  onclick="setRkTop(10)">Top 10</button>
-          <button class="top-opt"        id="top-25"  onclick="setRkTop(25)">Top 25</button>
-          <button class="top-opt"        id="top-50"  onclick="setRkTop(50)">Top 50</button>
-          <button class="top-opt"        id="top-100" onclick="setRkTop(100)">Top 100</button>
+        <div class="map-list" id="map-list">
+          <div class="loading">Chargement...</div>
         </div>
       </div>
-      <div class="t-head th-rk">
-        <span>#</span><span>Joueur</span><span>Points</span><span>Médailles</span><span>Cartes</span>
-      </div>
-      <div id="rk-body"><div class="t-load">Chargement du classement…</div></div>
-    </div>
-  </div>
-
-  <!-- Feed dernières victoires -->
-  <div>
-    <div class="s-top">
-      <div>
-        <div class="s-label">Feed</div>
-        <div class="s-title">Dernières Victoires</div>
-        <div class="s-sub">Actualisé toutes les 30 secondes</div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="feed-bar">
-        <div class="feed-bar-l">
-          <span class="feed-bar-title">Victoires récentes</span>
-          <div class="live-tag"><div class="live-pip"></div>Live</div>
+      
+      <div class="panel feed-panel">
+        <div class="panel-header">Dernières victoires</div>
+        <div id="feed-list">
+          <div class="loading">Chargement...</div>
         </div>
       </div>
-      <div id="feed-body"><div class="f-empty">Chargement…</div></div>
     </div>
-  </div>
-
-</div><!-- /wrap -->
-
-<!-- PLAYER MODAL -->
-<div class="ov" id="pm-ov" onclick="if(event.target===this)closePm()">
-  <div class="pm">
-    <div class="pm-head">
-      <div class="pm-id">
-        <div class="pm-av" id="pm-av">?</div>
-        <div>
-          <div class="pm-name" id="pm-name">—</div>
-          <div class="pm-sub" id="pm-sub">—</div>
+    
+    <div class="main-panel">
+      <div class="leaderboard-header">
+        <div class="leaderboard-title" id="lb-title">Sélectionnez une carte</div>
+        <div class="leaderboard-meta" id="lb-meta">-</div>
+      </div>
+      <div class="leaderboard" id="leaderboard">
+        <div class="empty-state">
+          <h3>🎮 Bienvenue sur OpenFront Runs</h3>
+          <p>Sélectionnez une carte dans la liste pour voir le classement</p>
         </div>
       </div>
-      <button class="pm-close" onclick="closePm()">✕</button>
-    </div>
-    <div class="pm-stats">
-      <div class="pm-stat"><div class="pm-sv bl" id="pm-pts">—</div><div class="pm-sl">Points</div></div>
-      <div class="pm-stat"><div class="pm-sv go" id="pm-gold">—</div><div class="pm-sl">🥇 Or</div></div>
-      <div class="pm-stat"><div class="pm-sv" id="pm-mc" style="color:var(--text)">—</div><div class="pm-sl">Cartes</div></div>
-    </div>
-    <div class="pm-list" id="pm-list"><div class="t-load">Chargement…</div></div>
-  </div>
-</div>
-
-<!-- FORM MODAL -->
-<div class="ov-form" id="form-ov" onclick="if(event.target===this)closeForm()">
-  <div class="fp">
-    <h3>Ajouter un run</h3>
-    <p class="fp-sub">Run marqué comme non-vérifié par l'API officielle.</p>
-    <div class="field">
-      <label>Pseudo OpenFront</label>
-      <input id="f-player" placeholder="TonPseudo" maxlength="32">
-    </div>
-    <div class="f2">
-      <div class="field"><label>Minutes</label><input id="f-min" type="number" placeholder="08" min="0" max="999"></div>
-      <div class="field"><label>Secondes</label><input id="f-sec" type="number" placeholder="34" min="0" max="59"></div>
-    </div>
-    <div class="field"><label>Carte</label>
-      <select id="f-map">
-        <option>Europe</option><option>Monde</option><option>Asie</option><option>East Asia</option>
-        <option>Afrique</option><option>Australie</option><option>Islande</option>
-        <option>Amérique du Nord</option><option>Amérique du Sud</option>
-        <option>Japon</option><option>Italie</option><option>Italia</option>
-        <option>Britannia</option><option>Britannia Classic</option><option>Europe Classic</option>
-        <option>Mars</option><option>Pluto</option><option>Pangée</option>
-        <option>Bosphore</option><option>Détroit de Béring</option>
-        <option>Strait of Gibraltar</option><option>Strait of Hormuz</option>
-        <option>Black Sea</option><option>Alpes</option><option>Hawaï</option>
-        <option>Arctique</option><option>Delta du Nil</option>
-        <option>San Francisco</option><option>New York City</option><option>Montreal</option>
-        <option>Passage</option><option>The Box</option><option>Traders Dream</option>
-        <option>Iénisseï</option><option>Baikal</option><option>Amazon River</option>
-        <option>Gulf of St. Lawrence</option><option>Gateway to the Atlantic</option>
-        <option>Falkland Islands</option><option>Faroe Islands</option><option>Four Islands</option>
-        <option>Lemnos</option><option>Aegean</option><option>Halkidiki</option>
-        <option>Lisbon</option><option>Mena</option><option>Achiran</option>
-        <option>Svalmel</option><option>Manicouagan</option><option>Sierpinski</option>
-        <option>Surrounded</option><option>Two Lakes</option><option>Deglaciated Antarctica</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>Lien partie <span style="color:var(--text3);text-transform:none;letter-spacing:0;font-weight:400">(optionnel)</span></label>
-      <input id="f-gamelink" placeholder="https://openfront.io/game/ABC123">
-    </div>
-    <div class="f-err" id="f-err" style="display:none"></div>
-    <div class="fp-foot">
-      <button class="nbtn nbtn-ghost" onclick="closeForm()">Annuler</button>
-      <button class="nbtn nbtn-prime" onclick="submitRun()" style="padding:8px 18px">Valider →</button>
     </div>
   </div>
-</div>
-
-<!-- FOOTER -->
-<footer>
-  <span>OpenFront.runs · Données via <a href="https://api.openfront.io" target="_blank">api.openfront.io</a></span>
-  <span>FFA Public · 400 bots · 10+ joueurs humains</span>
-</footer>
+  
+  <div class="panel rankings-panel">
+    <div class="panel-header">Classement global des joueurs</div>
+    <div id="rankings-list">
+      <div class="loading">Chargement...</div>
+    </div>
+  </div>
+  
+  <div class="last-update" id="last-update"></div>
+</main>
 
 <script>
-/* ═══════════════════════════════════
-   STATE
-═══════════════════════════════════ */
-const TODAY = new Date().toISOString().split('T')[0];
-let allRk = [], syncing = false, rkTop = 5;
+let allRuns = [];
+let allMaps = [];
+let activeMap = null;
 
-/* ═══════════════════════════════════
-   HELPERS
-═══════════════════════════════════ */
-function p2(n) { return String(n).padStart(2,'0'); }
-function fmt(s) {
-  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
-  return h > 0 ? `${p2(h)}:${p2(m)}:${p2(sec)}` : `${p2(m)}:${p2(sec)}`;
-}
-function hl(txt, q) {
-  if (!q) return txt;
-  const i = txt.toLowerCase().indexOf(q.toLowerCase());
-  if (i < 0) return txt;
-  return txt.slice(0,i) + '<mark>' + txt.slice(i,i+q.length) + '</mark>' + txt.slice(i+q.length);
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}m${s.toString().padStart(2, '0')}s`;
 }
 
-/* ═══════════════════════════════════
-   STATUS / STATS
-═══════════════════════════════════ */
-async function loadStatus() {
+function formatDate(isoString) {
+  const date = new Date(isoString);
+  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+}
+
+async function loadData() {
   try {
-    const d = await fetch('/api/status').then(r=>r.json());
-    document.getElementById('stat-runs').textContent    = (d.totalRuns||0).toLocaleString('fr');
-    document.getElementById('stat-players').textContent = (d.totalPlayers||0).toLocaleString('fr');
-    document.getElementById('stat-maps').textContent    = (d.totalMaps||0);
-    document.getElementById('pill-dot').className = 'pill-dot on';
-    document.getElementById('pill-txt').textContent = 'En ligne';
-  } catch(e) {
-    document.getElementById('pill-dot').className = 'pill-dot';
-    document.getElementById('pill-txt').textContent = 'Hors ligne';
+    const response = await fetch('runs.json');
+    if (!response.ok) throw new Error('Failed to load runs.json');
+    allRuns = await response.json();
+    processData();
+    renderMaps();
+    renderFeed();
+    renderRankings();
+    updateStats();
+    updateLastUpdate();
+  } catch (e) {
+    console.error('Error loading data:', e);
+    document.getElementById('map-list').innerHTML = '<div class="empty-state"><p>Erreur de chargement. Réessayez plus tard.</p></div>';
   }
 }
 
-/* ═══════════════════════════════════
-   SYNC
-═══════════════════════════════════ */
-async function triggerSync() {
-  if (syncing) return; syncing = true;
-  const btn = document.getElementById('btn-sync');
-  const ico = document.getElementById('sync-ico');
-  btn.classList.add('syncing');
-  ico.className = 'spin'; ico.textContent = '↻';
-  try {
-    const d = await fetch('/api/sync',{method:'POST'}).then(r=>r.json());
-    document.getElementById('pill-txt').textContent = `+${d.newRuns} · ${new Date().toLocaleTimeString('fr')}`;
-    await Promise.all([loadStatus(), loadRk(), loadFeed()]);
-  } catch(e) {
-    document.getElementById('pill-txt').textContent = 'Erreur sync';
-  }
-  btn.classList.remove('syncing');
-  ico.className = ''; ico.textContent = '↻';
-  syncing = false;
-}
-
-/* ═══════════════════════════════════
-   RANKING
-═══════════════════════════════════ */
-function renderRk(rows, q='') {
-  const body = document.getElementById('rk-body');
-  const cnt  = document.getElementById('rk-count');
-  if (!rows.length) {
-    body.innerHTML = q
-      ? `<div class="t-empty">Aucun résultat pour « ${q} »</div>`
-      : '<div class="t-load">Aucun joueur classé.</div>';
-    cnt.textContent=''; return;
-  }
-  cnt.textContent = `${rows.length} joueur${rows.length>1?'s':''}`;
-  const M = ['🥇','🥈','🥉'];
-  body.innerHTML = rows.map(r => {
-    const i   = allRk.findIndex(x=>x.player===r.player);
-    const cls = i===0?'k1':i===1?'k2':i===2?'k3':'';
-    const rnk = i<3
-      ? `<span class="rk-emoji">${M[i]}</span>`
-      : `<span class="rk-num">${p2(i+1)}</span>`;
-    const cg = r.gold   ? `<span class="chip chip-g">🥇${r.gold}</span>`   : '';
-    const cs = r.silver ? `<span class="chip chip-s">🥈${r.silver}</span>` : '';
-    const cb = r.bronze ? `<span class="chip chip-b">🥉${r.bronze}</span>` : '';
-    const nm = q
-      ? r.player.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>')
-      : r.player;
-    return `<div class="rk-row ${cls}" style="animation-delay:${Math.min(i,24)*.03}s"
-                 onclick="openPm('${r.player.replace(/'/g,"\\'")}')">
-      <div class="rk-rank">${rnk}</div>
-      <div class="rk-name">${nm}</div>
-      <div class="rk-pts">${r.points}<span class="rk-u">pts</span></div>
-      <div class="chips">${cg}${cs}${cb}</div>
-      <div class="rk-maps">${r.maps} carte${r.maps>1?'s':''}</div>
-    </div>`;
-  }).join('');
-}
-
-function filterRk(q) {
-  document.getElementById('rk-clear').classList.toggle('vis', q.length>0);
-  const filtered = allRk.filter(r=>r.player.toLowerCase().includes(q.toLowerCase()));
-  renderRk(filtered.slice(0, rkTop), q);
-}
-function clearRk() {
-  document.getElementById('rk-search').value='';
-  document.getElementById('rk-clear').classList.remove('vis');
-  renderRk(allRk.slice(0, rkTop),'');
-  document.getElementById('rk-search').focus();
-}
-
-function setRkTop(n) {
-  rkTop = n;
-  [5,10,25,50,100].forEach(k => {
-    const el = document.getElementById('top-'+k);
-    if (el) el.classList.toggle('active', n===k);
-  });
-  const q = document.getElementById('rk-search')?.value||'';
-  const filtered = q ? allRk.filter(r=>r.player.toLowerCase().includes(q.toLowerCase())) : allRk;
-  renderRk(filtered.slice(0, rkTop), q);
-}
-
-async function loadRk() {
-  try {
-    allRk = await fetch('/api/ranking').then(r=>r.json());
-    const q = document.getElementById('rk-search')?.value||'';
-    const filtered = q ? allRk.filter(r=>r.player.toLowerCase().includes(q.toLowerCase())) : allRk;
-    renderRk(filtered.slice(0, rkTop), q);
-  } catch(e) {
-    document.getElementById('rk-body').innerHTML = '<div class="t-load">Erreur.</div>';
-  }
-}
-
-/* ═══════════════════════════════════
-   FEED
-═══════════════════════════════════ */
-async function loadFeed() {
-  try {
-    const items = await fetch('/api/feed?limit=12').then(r=>r.json());
-    const el = document.getElementById('feed-body');
-    if (!items.length) { el.innerHTML='<div class="f-empty">Aucune victoire enregistrée.</div>'; return; }
-    const M = ['🥇','🥈','🥉'];
-    el.innerHTML = items.map((r,i) => {
-      const fresh = r.date===TODAY || (r.createdAt&&r.createdAt.startsWith(TODAY));
-      const nb    = fresh ? '<span class="badge-new">new</span>' : '';
-      const link  = r.gameUrl ? `<a href="${r.gameUrl}" target="_blank" class="f-link">↗</a>` : '';
-      return `<div class="feed-row" style="animation-delay:${i*.04}s">
-        <div class="f-ico">${i<3?M[i]:'⚡'}</div>
-        <div class="f-info">
-          <div class="f-player">${r.player}${nb}</div>
-          <div class="f-meta">${r.map}${r.difficulty&&r.difficulty!=='—'?' · '+r.difficulty:''} · ${r.date}</div>
-        </div>
-        <div class="f-time">${r.time}</div>
-        ${link}
-      </div>`;
-    }).join('');
-  } catch(e) { document.getElementById('feed-body').innerHTML='<div class="f-empty">Erreur.</div>'; }
-}
-
-/* ═══════════════════════════════════
-   PLAYER MODAL
-═══════════════════════════════════ */
-async function openPm(name) {
-  document.getElementById('pm-ov').classList.add('on');
-  document.body.style.overflow = 'hidden';
-  const ranked = allRk.find(r=>r.player===name);
-  document.getElementById('pm-av').textContent   = name[0].toUpperCase();
-  document.getElementById('pm-name').textContent = name;
-  document.getElementById('pm-pts').textContent  = ranked ? ranked.points : '—';
-  document.getElementById('pm-gold').textContent = ranked ? ranked.gold   : '—';
-  document.getElementById('pm-mc').textContent   = ranked ? ranked.maps   : '—';
-  document.getElementById('pm-sub').textContent  = ranked
-    ? `#${allRk.findIndex(r=>r.player===name)+1} au classement global`
-    : 'Non classé';
-  document.getElementById('pm-list').innerHTML = '<div class="t-load">Chargement…</div>';
-  try {
-    const d = await fetch('/api/player/'+encodeURIComponent(name)).then(r=>r.json());
-    document.getElementById('pm-mc').textContent = d.maps.length;
-    if (!d.maps.length) { document.getElementById('pm-list').innerHTML='<div class="t-load">Aucune carte.</div>'; return; }
-    const M = ['🥇','🥈','🥉'];
-    document.getElementById('pm-list').innerHTML = d.maps.map(m => {
-      const pos  = m.rank<=3 ? `<span style="font-size:17px">${M[m.rank-1]}</span>` : `<span class="pm-pos-n">${m.rank}e</span>`;
-      const tc   = m.rank===1?'t1':m.rank===2?'t2':m.rank===3?'t3':'';
-      const link = m.gameUrl ? `<a href="${m.gameUrl}" target="_blank" class="pm-go">↗</a>` : '<div style="width:26px"></div>';
-      return `<div class="pm-row">
-        <div class="pm-pos">${pos}</div>
-        <div class="pm-mn">${m.map}</div>
-        <div class="pm-t ${tc}">${m.time}</div>
-        <div class="pm-d">${m.date}</div>
-        ${link}
-      </div>`;
-    }).join('');
-  } catch(e) { document.getElementById('pm-list').innerHTML='<div class="t-load">Erreur.</div>'; }
-}
-function closePm() {
-  document.getElementById('pm-ov').classList.remove('on');
-  document.body.style.overflow='';
-}
-
-/* ═══════════════════════════════════
-   FORM MODAL
-═══════════════════════════════════ */
-function openForm()  { document.getElementById('form-ov').classList.add('on'); }
-function closeForm() { document.getElementById('form-ov').classList.remove('on'); document.getElementById('f-err').style.display='none'; }
-
-async function submitRun() {
-  const err = document.getElementById('f-err');
-  const player   = document.getElementById('f-player').value.trim();
-  const minutes  = parseInt(document.getElementById('f-min').value)||0;
-  const seconds  = parseInt(document.getElementById('f-sec').value)||0;
-  const map      = document.getElementById('f-map').value;
-  const gameLink = document.getElementById('f-gamelink').value.trim();
-  if (!player)           { err.textContent='Pseudo requis'; err.style.display='block'; return; }
-  if (!minutes&&!seconds){ err.textContent='Durée invalide'; err.style.display='block'; return; }
-  if (seconds>59)        { err.textContent='Secondes entre 0 et 59'; err.style.display='block'; return; }
-  try {
-    const d = await fetch('/api/runs',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({player,minutes,seconds,map,gameLink})
-    }).then(r=>r.json());
-    if (d.error) { err.textContent=d.error; err.style.display='block'; return; }
-    closeForm();
-    await Promise.all([loadStatus(), loadRk(), loadFeed()]);
-  } catch(e) { err.textContent='Erreur réseau'; err.style.display='block'; }
-}
-
-document.addEventListener('keydown', e => {
-  if (e.key==='Escape') { closePm(); closeForm(); }
-});
-
-/* ═══════════════════════════════════
-   INIT
-═══════════════════════════════════ */
-
-/* ═══════════════════════════════════
-   LEADERBOARD PAR CARTE
-═══════════════════════════════════ */
-let allMaps = [], activeMap = null;
-const TODAY_LB = new Date().toISOString().split('T')[0];
-
-async function loadMaps() {
-  try {
-    allMaps = await fetch('/api/maps').then(r=>r.json());
-    document.getElementById('map-count').textContent = allMaps.length;
-    renderMapList('');
-    if (!activeMap && allMaps.length) selectMap(allMaps[0].map);
-  } catch(e) { document.getElementById('map-scroll').innerHTML='<div class="t-load">Erreur.</div>'; }
-}
-
-function fmt2(s) {
-  const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
-  return h>0?`${p2(h)}:${p2(m)}:${p2(sec)}`:`${p2(m)}:${p2(sec)}`;
-}
-
-function renderMapList(q) {
-  const filtered = allMaps.filter(m => m.map.toLowerCase().includes(q.toLowerCase()));
-  const el = document.getElementById('map-scroll');
-  if (!filtered.length) { el.innerHTML='<div class="t-load">Aucune carte</div>'; return; }
-  el.innerHTML = filtered.map(m => {
-    const active = m.map === activeMap ? ' active' : '';
-    const nm = q ? m.map.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>') : m.map;
-    return `<div class="map-item${active}" onclick="selectMap('${m.map.replace(/'/g,"\\'")}')">
-      <span class="map-item-name">${nm}</span>
-      <span class="map-item-best">${fmt2(m.best)}</span>
-    </div>`;
-  }).join('');
-}
-
-function filterMaps(q) { renderMapList(q); }
-
-async function selectMap(map) {
-  activeMap = map;
-  renderMapList(document.getElementById('map-filter').value);
-  document.getElementById('lb-map-title').textContent = map;
-  document.getElementById('lb-body').innerHTML = '<div class="t-load">Chargement…</div>';
-  try {
-    const runs = await fetch('/api/runs/' + encodeURIComponent(map)).then(r=>r.json());
-    const mapData = allMaps.find(m => m.map === map);
-    document.getElementById('lb-map-meta').textContent = mapData ? `${mapData.count} run${mapData.count>1?'s':''}` : '';
-    if (!runs.length) {
-      document.getElementById('lb-body').innerHTML = '<div class="t-load">Aucun run sur cette carte.</div>';
-      return;
+function processData() {
+  // Calculer les stats par carte
+  const mapStats = {};
+  const playerStats = {};
+  
+  allRuns.forEach(run => {
+    // Stats par carte
+    if (!mapStats[run.map]) {
+      mapStats[run.map] = { map: run.map, total: 0, best: Infinity, runs: [] };
     }
-    const M = ['🥇','🥈','🥉'];
-    const pCls = ['p1','p2','p3','',''];
-    document.getElementById('lb-body').innerHTML = runs.map((r,i) => {
-      const cls = pCls[i] || '';
-      const rank = i < 3 ? `<span class="lb-medal">${M[i]}</span>` : `<span class="lb-num">${p2(i+1)}</span>`;
-      const fresh = r.date===TODAY_LB || (r.createdAt&&r.createdAt.startsWith(TODAY_LB));
-      const nb = fresh ? '<span class="badge-new">new</span>' : '';
-      const link = r.gameUrl ? `<a href="${r.gameUrl}" target="_blank" class="lb-go">↗</a>` : '';
-      return `<div class="lb-row ${cls}" style="animation-delay:${i*.06}s">
-        <div class="lb-rank">${rank}</div>
-        <div class="lb-player"><span class="lb-pname">${r.player}</span>${nb}</div>
-        <div class="lb-time">${r.time}</div>
-        <div class="lb-date">${r.date||'—'}</div>
-        <div class="lb-link-col">${link}</div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    document.getElementById('lb-body').innerHTML = '<div class="t-load">Erreur de chargement.</div>';
-  }
-}
-
-
-/* ═══════════════════════════════════
-   SETTINGS WIDGET
-═══════════════════════════════════ */
-const ACCENTS = [
-  { id:'blue',   label:'Bleu',    h:'#4b7fff', hL:'#829dff', hD:'#1a3fa0', hG:'rgba(75,127,255,0.13)' },
-  { id:'green',  label:'Vert',    h:'#22c55e', hL:'#4ade80', hD:'#15803d', hG:'rgba(34,197,94,0.13)'  },
-  { id:'purple', label:'Violet',  h:'#a855f7', hL:'#c084fc', hD:'#7e22ce', hG:'rgba(168,85,247,0.13)' },
-  { id:'rose',   label:'Rose',    h:'#f43f5e', hL:'#fb7185', hD:'#be123c', hG:'rgba(244,63,94,0.13)'  },
-  { id:'orange', label:'Orange',  h:'#f97316', hL:'#fb923c', hD:'#c2410c', hG:'rgba(249,115,22,0.13)' },
-  { id:'cyan',   label:'Cyan',    h:'#06b6d4', hL:'#22d3ee', hD:'#0e7490', hG:'rgba(6,182,212,0.13)'  },
-  { id:'yellow', label:'Jaune',   h:'#eab308', hL:'#facc15', hD:'#a16207', hG:'rgba(234,179,8,0.13)'  },
-  { id:'red',    label:'Rouge',   h:'#ef4444', hL:'#f87171', hD:'#b91c1c', hG:'rgba(239,68,68,0.13)'  },
-];
-
-const LIGHT_TOKENS = {
-  '--bg':    '#f0f4ff', '--bg2':   '#ffffff', '--card':  '#ffffff',
-  '--card2': '#f5f8ff', '--rim':   'rgba(0,0,50,0.08)', '--rim2':  'rgba(0,0,50,0.13)',
-  '--rim3':  'rgba(0,0,50,0.20)', '--shine': 'rgba(255,255,255,0.80)',
-  '--text':  '#0d1530', '--text2': '#4a5a80', '--text3': '#8a9abf',
-};
-const DARK_TOKENS = {
-  '--bg':    '#08080f', '--bg2':   '#0c0c16', '--card':  '#10101c',
-  '--card2': '#14141f', '--rim':   'rgba(255,255,255,0.055)', '--rim2':  'rgba(255,255,255,0.10)',
-  '--rim3':  'rgba(255,255,255,0.16)', '--shine': 'rgba(255,255,255,0.20)',
-  '--text':  '#eeeeff', '--text2': '#8888aa', '--text3': '#48486a',
-};
-
-let swOpen = false;
-let currentTheme = localStorage.getItem('of-theme') || 'dark';
-let currentAccent = localStorage.getItem('of-accent') || 'blue';
-
-function toggleSw() {
-  swOpen = !swOpen;
-  document.getElementById('sw-panel').classList.toggle('open', swOpen);
-}
-document.addEventListener('click', e => {
-  if (swOpen && !e.target.closest('#sw-panel') && !e.target.closest('#sw-fab')) {
-    swOpen = false;
-    document.getElementById('sw-panel').classList.remove('open');
-  }
-});
-
-function applyAccent(id) {
-  const a = ACCENTS.find(x => x.id === id);
-  if (!a) return;
-  const root = document.documentElement.style;
-  root.setProperty('--blue',  a.h);
-  root.setProperty('--blueL', a.hL);
-  root.setProperty('--blueD', a.hD);
-  root.setProperty('--blueG', a.hG);
-  root.setProperty('--accent',  a.h);
-  root.setProperty('--accentL', a.hL);
-  document.querySelectorAll('.sw-color').forEach(el => {
-    el.classList.toggle('active', el.dataset.id === id);
+    mapStats[run.map].total++;
+    mapStats[run.map].runs.push(run);
+    if (run.duration_s < mapStats[run.map].best) {
+      mapStats[run.map].best = run.duration_s;
+    }
+    
+    // Stats par joueur
+    if (!playerStats[run.player]) {
+      playerStats[run.player] = { player: run.player, wins: 0, maps: new Set() };
+    }
+    playerStats[run.player].wins++;
+    playerStats[run.player].maps.add(run.map);
   });
-  currentAccent = id;
-  localStorage.setItem('of-accent', id);
+  
+  allMaps = Object.values(mapStats).sort((a, b) => a.map.localeCompare(b.map));
+  
+  // Trier les runs dans chaque carte
+  allMaps.forEach(m => {
+    m.runs.sort((a, b) => a.duration_s - b.duration_s);
+  });
+  
+  // Calculer classement global
+  window.playerRankings = Object.values(playerStats)
+    .map(p => ({ ...p, mapCount: p.maps.size }))
+    .sort((a, b) => b.wins - a.wins);
 }
 
-function applyTheme(theme) {
-  const tokens = theme === 'light' ? LIGHT_TOKENS : DARK_TOKENS;
-  const root = document.documentElement.style;
-  Object.entries(tokens).forEach(([k,v]) => root.setProperty(k, v));
-  document.getElementById('sw-dark').classList.toggle('active', theme === 'dark');
-  document.getElementById('sw-light').classList.toggle('active', theme === 'light');
-  currentTheme = theme;
-  localStorage.setItem('of-theme', theme);
-  // Re-apply accent on top
-  applyAccent(currentAccent);
+function updateStats() {
+  document.getElementById('stat-runs').textContent = allRuns.length.toLocaleString('fr');
+  document.getElementById('stat-maps').textContent = allMaps.length;
+  document.getElementById('stat-players').textContent = window.playerRankings?.length || 0;
+  
+  const bestTime = allMaps.length > 0 ? Math.min(...allMaps.map(m => m.best)) : 0;
+  document.getElementById('stat-best').textContent = bestTime > 0 ? formatTime(bestTime) : '-';
 }
 
-function setTheme(theme) { applyTheme(theme); }
-
-function initSwWidget() {
-  // Build color swatches
-  const el = document.getElementById('sw-colors');
-  el.innerHTML = ACCENTS.map(a =>
-    `<div class="sw-color${a.id===currentAccent?' active':''}" data-id="${a.id}"
-       style="background:${a.h}" title="${a.label}" onclick="applyAccent('${a.id}')"></div>`
-  ).join('');
-  // Apply saved prefs
-  applyTheme(currentTheme);
+function updateLastUpdate() {
+  if (allRuns.length > 0) {
+    const lastRun = allRuns[0];
+    const date = new Date(lastRun.timestamp);
+    document.getElementById('last-update').textContent = 
+      `Dernière mise à jour: ${date.toLocaleString('fr-FR')} — Prochaine sync dans ~10 minutes`;
+  }
 }
 
-loadMaps();
-loadStatus();
-loadRk();
-loadFeed();
-setInterval(loadStatus, 60_000);
-setInterval(() => { loadRk(); loadFeed(); }, 30_000);
+function renderMaps() {
+  const container = document.getElementById('map-list');
+  const search = document.getElementById('map-search').value.toLowerCase();
+  
+  const filteredMaps = search 
+    ? allMaps.filter(m => m.map.toLowerCase().includes(search))
+    : allMaps;
+  
+  if (filteredMaps.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>Aucune carte trouvée</p></div>';
+    return;
+  }
+  
+  container.innerHTML = filteredMaps.map(m => `
+    <div class="map-item ${activeMap === m.map ? 'active' : ''}" onclick="selectMap('${m.map.replace(/'/g, "\\'")}')">
+      <span class="map-name">${m.map}</span>
+      <span class="map-count">${m.total}</span>
+    </div>
+  `).join('');
+}
 
-// Init widget après chargement DOM
-document.addEventListener("DOMContentLoaded", initSwWidget);
-if (document.readyState !== "loading") initSwWidget();
+function filterMaps() {
+  renderMaps();
+}
+
+function selectMap(mapName) {
+  activeMap = mapName;
+  renderMaps(); // Refresh to update active state
+  
+  const mapData = allMaps.find(m => m.map === mapName);
+  if (!mapData) return;
+  
+  document.getElementById('lb-title').textContent = mapName;
+  document.getElementById('lb-meta').textContent = `${mapData.total} run${mapData.total > 1 ? 's' : ''} — Meilleur: ${formatTime(mapData.best)}`;
+  
+  const leaderboard = document.getElementById('leaderboard');
+  leaderboard.innerHTML = mapData.runs.slice(0, 50).map((run, i) => {
+    const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+    const medal = i < 3 ? ['🥇','🥈','🥉'][i] : '';
+    return `
+      <div class="run-row">
+        <div class="run-rank ${rankClass}">${i + 1}</div>
+        <div class="run-player">${medal} ${run.player}</div>
+        <div class="run-time">${formatTime(run.duration_s)}</div>
+        <div class="run-date">${formatDate(run.timestamp)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderFeed() {
+  const container = document.getElementById('feed-list');
+  const recentRuns = [...allRuns].slice(0, 10);
+  
+  if (recentRuns.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>Aucune victoire enregistrée</p></div>';
+    return;
+  }
+  
+  container.innerHTML = recentRuns.map((run, i) => {
+    const rank = allMaps.find(m => m.map === run.map)?.runs.findIndex(r => r.id === run.id) + 1 || 0;
+    const isTop3 = rank <= 3 && rank > 0;
+    return `
+      <div class="feed-item">
+        <div class="feed-rank ${isTop3 ? 'top3' : ''}">${rank > 0 ? rank : '-'}</div>
+        <div class="feed-info">
+          <div class="feed-player">${run.player}</div>
+          <div class="feed-map">${run.map}</div>
+        </div>
+        <div class="feed-time">${formatTime(run.duration_s)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderRankings() {
+  const container = document.getElementById('rankings-list');
+  const rankings = window.playerRankings?.slice(0, 20) || [];
+  
+  if (rankings.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>Aucun joueur classé</p></div>';
+    return;
+  }
+  
+  container.innerHTML = rankings.map((p, i) => `
+    <div class="ranking-row">
+      <div class="ranking-pos ${i < 3 ? 'top3' : ''}">${i + 1}</div>
+      <div class="ranking-player">${p.player}</div>
+      <div class="ranking-maps">${p.mapCount} carte${p.mapCount > 1 ? 's' : ''}</div>
+      <div class="ranking-wins">${p.wins}</div>
+    </div>
+  `).join('');
+}
+
+function refreshData() {
+  const icon = document.getElementById('sync-icon');
+  icon.classList.add('spin');
+  loadData().then(() => {
+    icon.classList.remove('spin');
+  });
+}
+
+// Load on startup
+loadData();
+
+// Auto refresh every 5 minutes
+setInterval(loadData, 5 * 60 * 1000);
 </script>
-
-<!-- SETTINGS WIDGET -->
-<button class="sw-fab" id="sw-fab" onclick="toggleSw()" title="Paramètres d'affichage">⚙</button>
-<div class="sw-panel" id="sw-panel">
-
-  <div class="sw-section-lbl">Thème</div>
-  <div class="sw-theme-row">
-    <button class="sw-theme-btn" id="sw-dark"  onclick="setTheme('dark')">
-      <div class="sw-swatch swatch-dark"></div> Nuit
-    </button>
-    <button class="sw-theme-btn" id="sw-light" onclick="setTheme('light')">
-      <div class="sw-swatch swatch-light"></div> Jour
-    </button>
-  </div>
-
-  <div class="sw-divider"></div>
-
-  <div class="sw-section-lbl">Couleur d'accent</div>
-  <div class="sw-colors" id="sw-colors"></div>
-
-</div>
-
 </body>
 </html>
+
