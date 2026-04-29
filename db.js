@@ -148,20 +148,11 @@ async function restoreFromGitHub() {
   }
 }
 
-// Restaurer au démarrage (non bloquant), puis activer le backup périodique
+// Backup périodique uniquement - pas de restauration automatique au boot
+// (la restauration manuelle peut être faite via l'API /api/restore si besoin)
 if (USE_GITHUB_BACKUP) {
-  // Lancer la restauration en background sans bloquer le serveur
-  setTimeout(() => {
-    restoreFromGitHub().then(() => {
-      console.log('[backup] Restauration terminée, activation du backup périodique');
-    }).catch(e => {
-      console.log('[backup] Erreur restauration (non bloquant):', e.message);
-    });
-  }, 5000); // Attendre 5s que le serveur démarre
-  
-  // Backup périodique indépendant
-  setInterval(backupToGitHub, 60000); // Vérifie toutes les minutes
-  console.log('[backup] GitHub backup activé (restauration en background)');
+  setInterval(backupToGitHub, 60000); // Backup toutes les minutes
+  console.log('[backup] GitHub backup activé (sans restauration auto au boot)');
 }
 
 
@@ -613,7 +604,7 @@ module.exports = {
 
   getStats, getFeed, getPlayerMaps, getGlobalRanking,
 
-  getCheckpoint, setCheckpoint, resetCheckpoints, listCheckpoints,
+  getCheckpoint, setCheckpoint, resetCheckpoints, listCheckpoints, restoreFromGitHub,
 
 };
 

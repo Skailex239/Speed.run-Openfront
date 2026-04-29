@@ -6,7 +6,7 @@ const path    = require("path");
 
 const {
   getLeaderboard, getMaps, insertRun, getStats,
-  getGlobalRanking, getPlayerMaps, getFeed, resetCheckpoints, listCheckpoints
+  getGlobalRanking, getPlayerMaps, getFeed, resetCheckpoints, listCheckpoints, restoreFromGitHub
 } = require("./db");
 const { syncSpeedruns, syncHistory, syncMissed } = require("./sync");
 const { fetchGameDetail } = require("./sync");
@@ -109,6 +109,17 @@ app.post("/api/sync", async (req, res) => {
   console.log("[API] Sync manuelle");
   const result = await syncSpeedruns();
   res.json(result);
+});
+
+// POST /api/restore - Restauration manuelle depuis GitHub
+app.post("/api/restore", async (req, res) => {
+  console.log("[API] Restauration manuelle demandée");
+  try {
+    await restoreFromGitHub();
+    res.json({ success: true, message: "Restauration terminée" });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
 });
 
 // POST /api/runs
