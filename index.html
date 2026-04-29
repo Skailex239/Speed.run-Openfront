@@ -121,10 +121,11 @@ function updateLastUpdate() {
   }
 }
 function renderMaps() {
-  const c = document.getElementById("map-list"), q = document.getElementById("map-search").value.toLowerCase();
+  const c = document.getElementById("map-list");
+  const q = document.getElementById("map-search").value.toLowerCase();
   const f = q ? allMaps.filter(m => m.map.toLowerCase().includes(q)) : allMaps;
   if (!f.length) { c.innerHTML = '<div class="empty-state"><p>Aucune carte</p></div>'; return; }
-  c.innerHTML = f.map(m => `<div class="map-item ${activeMap===m.map?"active":""}" onclick="selectMap("${m.map.replace(/"/g, "\\"")}")"><span class="map-name">${m.map}</span><span class="map-count">${m.total}</span></div>`).join("");
+  c.innerHTML = f.map(m => '<div class="map-item ' + (activeMap===m.map?"active":"") + '" onclick="selectMap(\'' + m.map.replace(/'/g, "\\'") + '\')"><span class="map-name">' + m.map + '</span><span class="map-count">' + m.total + '</span></div>').join("");
 }
 function filterMaps() { renderMaps(); }
 function selectMap(name) {
