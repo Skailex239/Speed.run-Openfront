@@ -42,6 +42,12 @@ async function backupToGitHub() {
     const runs = db.get('runs').size().value();
     console.log(`[backup] Fichier lu: ${content.length} bytes, ${runs} runs`);
     
+    // Ne pas backup si pas assez de runs (pour éviter d'écraser les données)
+    if (runs < 10) {
+      console.log(`[backup] ⏳ Ignoré - seulement ${runs} runs (minimum 10 pour backup)`);
+      return;
+    }
+    
     const contentBase64 = Buffer.from(content).toString('base64');
     
     // Essayer de récupérer le sha actuel (pour update)
