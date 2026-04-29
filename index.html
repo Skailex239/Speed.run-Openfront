@@ -1,51 +1,100 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- GitHub Pages v4 -->
-<title>OpenFront SpeedRun Leaderboard - v3 CLEAN</title>
+<title>OpenFront SpeedRun Leaderboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-body { background: #0a0a0f; color: #f0f0f5; font-family: system-ui, sans-serif; margin: 0; padding: 40px 20px; }
-.container { max-width: 1200px; margin: 0 auto; }
+:root {
+  --bg: #0a0a0f; --bg2: #12121a; --card: #1a1a24; --card2: #22222e;
+  --rim: rgba(255,255,255,0.06); --rim2: rgba(255,255,255,0.12);
+  --text: #f0f0f5; --text2: #8a8a9a; --text3: #5a5a6a;
+  --blue: #4b7fff; --blueL: #6b9fff; --gold: #f0c060;
+  --silver: #a0b0c4; --bronze: #c08840; --green: #3dd68c;
+  --f: 'Inter', sans-serif; --mono: 'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text); font-family: var(--f);
+  min-height: 100vh; -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse 1100px 600px at 15% -5%, rgba(75,127,255,0.07) 0%, transparent 70%);
+}
+.container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; position: relative; z-index: 1; }
 header { text-align: center; margin-bottom: 40px; }
-h1 { font-size: 42px; margin-bottom: 10px; }
-h1 span { color: #4b7fff; }
-.subtitle { color: #8a8a9a; }
+h1 { font-size: 42px; font-weight: 700; margin-bottom: 10px; }
+h1 span { color: var(--blueL); }
+.subtitle { color: var(--text2); font-size: 16px; }
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
-.stat-card { background: #1a1a24; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; text-align: center; }
-.stat-value { font-size: 32px; font-weight: 700; color: #6b9fff; }
-.stat-label { font-size: 12px; color: #8a8a9a; text-transform: uppercase; margin-top: 6px; }
-.main-grid { display: grid; grid-template-columns: 300px 1fr; gap: 24px; }
-.sidebar { background: #1a1a24; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden; }
-.sidebar-header { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); font-weight: 600; font-size: 14px; color: #8a8a9a; text-transform: uppercase; }
-.map-search { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-.map-search input { width: 100%; background: #12121a; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px; color: #f0f0f5; font-size: 14px; outline: none; }
+.stat-card { background: var(--card); border: 1px solid var(--rim); border-radius: 12px; padding: 24px; text-align: center; }
+.stat-value { font-size: 32px; font-weight: 700; color: var(--blueL); }
+.stat-label { font-size: 12px; color: var(--text2); text-transform: uppercase; margin-top: 6px; letter-spacing: 1px; }
+.main-grid { display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+.sidebar { background: var(--card); border: 1px solid var(--rim); border-radius: 12px; overflow: hidden; }
+.sidebar-header { padding: 16px 20px; border-bottom: 1px solid var(--rim); font-weight: 600; font-size: 14px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+.map-search { padding: 12px 16px; border-bottom: 1px solid var(--rim); }
+.map-search input { width: 100%; background: var(--bg2); border: 1px solid var(--rim); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: var(--f); font-size: 14px; outline: none; }
+.map-search input:focus { border-color: var(--blue); }
 .map-list { max-height: 400px; overflow-y: auto; }
-.map-item { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-.map-item:hover, .map-item.active { background: #22222e; }
-.map-item.active { border-left: 3px solid #4b7fff; padding-left: 13px; }
-.map-name { font-weight: 500; }
-.map-count { font-family: monospace; font-size: 12px; color: #5a5a6a; background: #12121a; padding: 2px 8px; border-radius: 12px; }
-.content { background: #1a1a24; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden; }
-.content-header { padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.map-item { padding: 12px 16px; border-bottom: 1px solid var(--rim); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s; }
+.map-item:hover, .map-item.active { background: var(--card2); }
+.map-item.active { border-left: 3px solid var(--blue); padding-left: 13px; }
+.map-name { font-weight: 500; font-size: 14px; }
+.map-count { font-family: var(--mono); font-size: 12px; color: var(--text3); background: var(--bg2); padding: 2px 8px; border-radius: 12px; }
+.content { background: var(--card); border: 1px solid var(--rim); border-radius: 12px; overflow: hidden; }
+.content-header { padding: 20px 24px; border-bottom: 1px solid var(--rim); }
 .content-title { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
-.content-meta { font-size: 13px; color: #8a8a9a; }
+.content-meta { font-size: 13px; color: var(--text2); }
 .leaderboard { min-height: 300px; }
-.run-row { display: grid; grid-template-columns: 60px 1fr 100px 100px; align-items: center; padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.run-row { display: grid; grid-template-columns: 60px 1fr 100px 100px; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--rim); transition: background 0.15s; cursor: pointer; }
 .run-row:hover { background: rgba(255,255,255,0.02); }
-.run-rank { font-family: monospace; font-weight: 700; font-size: 16px; color: #5a5a6a; }
-.run-rank.gold { color: #f0c060; }
-.run-rank.silver { color: #a0b0c4; }
-.run-rank.bronze { color: #c08840; }
-.run-player { font-weight: 500; font-size: 15px; }
-.run-time { font-family: monospace; font-weight: 600; font-size: 15px; color: #6b9fff; text-align: right; }
-.run-date { font-family: monospace; font-size: 12px; color: #5a5a6a; text-align: right; }
-.empty-state { padding: 60px 40px; text-align: center; color: #8a8a9a; }
-.empty-state h3 { font-size: 18px; color: #f0f0f5; margin-bottom: 8px; }
-.loading { padding: 40px; text-align: center; color: #8a8a9a; }
-.last-update { text-align: center; padding: 20px; color: #5a5a6a; font-size: 13px; margin-top: 20px; }
-@media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } .stats { grid-template-columns: repeat(2, 1fr); } }
+.run-rank { font-family: var(--mono); font-weight: 700; font-size: 16px; color: var(--text3); }
+.run-rank.gold { color: var(--gold); }
+.run-rank.silver { color: var(--silver); }
+.run-rank.bronze { color: var(--bronze); }
+.run-player { font-weight: 500; font-size: 15px; display: flex; align-items: center; gap: 8px; color: var(--blueL); }
+.run-player:hover { text-decoration: underline; }
+.run-medal { font-size: 16px; }
+.run-time { font-family: var(--mono); font-weight: 600; font-size: 15px; color: var(--blueL); text-align: right; }
+.run-date { font-family: var(--mono); font-size: 12px; color: var(--text3); text-align: right; }
+.empty-state { padding: 60px 40px; text-align: center; color: var(--text2); }
+.empty-state h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; }
+.loading { padding: 40px; text-align: center; color: var(--text2); }
+.last-update { text-align: center; padding: 20px; color: var(--text3); font-size: 13px; margin-top: 20px; }
+.feed-section { margin-top: 40px; }
+.feed-header { padding: 16px 20px; border-bottom: 1px solid var(--rim); font-weight: 600; font-size: 14px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+.feed-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--rim); }
+.feed-rank { width: 32px; height: 32px; border-radius: 50%; background: var(--bg2); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.feed-rank.top { background: var(--gold); color: #000; }
+.feed-info { flex: 1; }
+.feed-player { font-weight: 500; font-size: 14px; color: var(--blueL); cursor: pointer; }
+.feed-player:hover { text-decoration: underline; }
+.feed-map { font-size: 12px; color: var(--text2); }
+.feed-time { font-family: var(--mono); font-weight: 600; color: var(--green); }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.modal-overlay.active { display: flex; }
+.modal { background: var(--card); border: 1px solid var(--rim); border-radius: 16px; width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto; position: relative; }
+.modal-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; background: var(--bg2); border: 1px solid var(--rim); border-radius: 8px; color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.modal-close:hover { background: var(--card2); color: var(--text); }
+.modal-header { padding: 24px 24px 0; }
+.modal-title { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+.modal-subtitle { color: var(--text2); font-size: 14px; }
+.modal-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 20px 24px; }
+.modal-stat { background: var(--bg2); border: 1px solid var(--rim); border-radius: 10px; padding: 16px; text-align: center; }
+.modal-stat-value { font-size: 24px; font-weight: 700; color: var(--blueL); }
+.modal-stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; margin-top: 4px; letter-spacing: 0.5px; }
+.modal-section { padding: 0 24px 24px; }
+.modal-section-title { font-size: 14px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+.player-runs { max-height: 300px; overflow-y: auto; border: 1px solid var(--rim); border-radius: 10px; }
+.player-run-row { display: grid; grid-template-columns: 1fr 80px 100px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--rim); font-size: 13px; }
+.player-run-row:last-child { border-bottom: none; }
+.player-run-map { font-weight: 500; }
+.player-run-rank { font-family: var(--mono); color: var(--text3); text-align: center; }
+.player-run-time { font-family: var(--mono); font-weight: 600; color: var(--green); text-align: right; }
+@media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } .stats { grid-template-columns: repeat(2, 1fr); } .modal-stats { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
 <body>
@@ -76,13 +125,39 @@ h1 span { color: #4b7fff; }
     </div>
   </div>
   
+  <div class="feed-section">
+    <div class="feed-header">Dernières victoires</div>
+    <div id="feed-list"><div class="loading">Chargement...</div></div>
+  </div>
+  
   <div class="last-update" id="last-update">En attente de données...</div>
 </div>
 
+<div class="modal-overlay" id="player-modal" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-header">
+      <div class="modal-title" id="modal-player-name">Joueur</div>
+      <div class="modal-subtitle" id="modal-player-stats">0 runs · 0 cartes</div>
+    </div>
+    <div class="modal-stats">
+      <div class="modal-stat"><div class="modal-stat-value" id="modal-wins">0</div><div class="modal-stat-label">Victoires</div></div>
+      <div class="modal-stat"><div class="modal-stat-value" id="modal-maps">0</div><div class="modal-stat-label">Cartes jouées</div></div>
+      <div class="modal-stat"><div class="modal-stat-value" id="modal-avg">—</div><div class="modal-stat-label">Temps moyen</div></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Performances</div>
+      <div class="player-runs" id="modal-runs"></div>
+    </div>
+  </div>
+</div>
+
 <script>
-let allRuns = [], allMaps = [], activeMap = null;
+let allRuns = [], allMaps = [], activeMap = null, playerStats = {};
+
 function formatTime(s) { const m = Math.floor(s/60); const sec = s%60; return m+"m"+String(sec).padStart(2,"0")+"s"; }
 function formatDate(iso) { const d = new Date(iso); return d.toLocaleDateString("fr-FR", {day:"2-digit", month:"2-digit"}); }
+
 async function loadData() {
   try {
     const r = await fetch("runs.json");
@@ -90,37 +165,43 @@ async function loadData() {
     allRuns = await r.json();
     processData();
     renderMaps();
+    renderFeed();
     updateStats();
     updateLastUpdate();
   } catch(e) {
     document.getElementById("map-list").innerHTML = '<div class="empty-state"><p>Erreur de chargement</p></div>';
+    document.getElementById("feed-list").innerHTML = '<div class="empty-state"><p>Erreur de chargement</p></div>';
   }
 }
+
 function processData() {
-  const ms = {}, ps = {};
+  const ms = {};
+  playerStats = {};
   allRuns.forEach(r => {
     if (!ms[r.map]) ms[r.map] = {map: r.map, total: 0, best: Infinity, runs: []};
     ms[r.map].total++; ms[r.map].runs.push(r); if (r.duration_s < ms[r.map].best) ms[r.map].best = r.duration_s;
-    if (!ps[r.player]) ps[r.player] = {player: r.player, wins: 0, maps: new Set()};
-    ps[r.player].wins++; ps[r.player].maps.add(r.map);
+    if (!playerStats[r.player]) playerStats[r.player] = {player: r.player, wins: 0, maps: new Set(), runs: [], totalTime: 0};
+    playerStats[r.player].wins++; playerStats[r.player].maps.add(r.map); playerStats[r.player].runs.push(r); playerStats[r.player].totalTime += r.duration_s;
   });
   allMaps = Object.values(ms).sort((a,b) => a.map.localeCompare(b.map));
   allMaps.forEach(m => m.runs.sort((a,b) => a.duration_s - b.duration_s));
-  window.playerRankings = Object.values(ps).map(p => ({...p, mapCount: p.maps.size})).sort((a,b) => b.wins - a.wins);
 }
+
 function updateStats() {
   document.getElementById("stat-runs").textContent = allRuns.length.toLocaleString("fr");
   document.getElementById("stat-maps").textContent = allMaps.length;
-  document.getElementById("stat-players").textContent = window.playerRankings?.length || 0;
+  document.getElementById("stat-players").textContent = Object.keys(playerStats).length;
   const bt = allMaps.length > 0 ? Math.min(...allMaps.map(m => m.best)) : 0;
   document.getElementById("stat-best").textContent = bt > 0 ? formatTime(bt) : "—";
 }
+
 function updateLastUpdate() {
   if (allRuns.length > 0) {
     const lr = allRuns.reduce((l, r) => new Date(r.timestamp) > new Date(l.timestamp) ? r : l, allRuns[0]);
     document.getElementById("last-update").textContent = "Dernière mise à jour: " + new Date(lr.timestamp).toLocaleString("fr-FR");
   }
 }
+
 function renderMaps() {
   const c = document.getElementById("map-list");
   const q = document.getElementById("map-search").value.toLowerCase();
@@ -128,7 +209,9 @@ function renderMaps() {
   if (!f.length) { c.innerHTML = '<div class="empty-state"><p>Aucune carte</p></div>'; return; }
   c.innerHTML = f.map(m => '<div class="map-item ' + (activeMap===m.map?"active":"") + '" onclick="selectMap(\'' + m.map.replace(/'/g, "\\'") + '\')"><span class="map-name">' + m.map + '</span><span class="map-count">' + m.total + '</span></div>').join("");
 }
+
 function filterMaps() { renderMaps(); }
+
 function selectMap(name) {
   activeMap = name; renderMaps();
   const d = allMaps.find(m => m.map === name); if (!d) return;
@@ -137,9 +220,46 @@ function selectMap(name) {
   const medals = ["🥇","🥈","🥉"];
   document.getElementById("leaderboard").innerHTML = d.runs.slice(0,50).map((r,i) => {
     const rc = i===0?"gold":i===1?"silver":i===2?"bronze":"";
-    return `<div class="run-row"><div class="run-rank ${rc}">${i+1}</div><div class="run-player">${i<3?medals[i]+" ":""}${r.player}</div><div class="run-time">${formatTime(r.duration_s)}</div><div class="run-date">${formatDate(r.timestamp)}</div></div>`;
+    return '<div class="run-row" onclick="showPlayer(\'' + r.player.replace(/'/g, "\\'") + '\')"><div class="run-rank ' + rc + '">' + (i+1) + '</div><div class="run-player">' + (i<3?medals[i]+" ":"") + r.player + '</div><div class="run-time">' + formatTime(r.duration_s) + '</div><div class="run-date">' + formatDate(r.timestamp) + '</div></div>';
   }).join("");
 }
+
+function renderFeed() {
+  const c = document.getElementById("feed-list");
+  const recent = [...allRuns].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10);
+  if (!recent.length) { c.innerHTML = '<div class="empty-state"><p>Aucune victoire</p></div>'; return; }
+  c.innerHTML = recent.map((r,i) => {
+    const mapData = allMaps.find(m => m.map === r.map);
+    const rank = mapData ? mapData.runs.findIndex(x => x.id === r.id) + 1 : 0;
+    const isTop3 = rank <= 3 && rank > 0;
+    return '<div class="feed-item"><div class="feed-rank ' + (isTop3?"top":"") + '">' + (rank>0?rank:"-") + '</div><div class="feed-info"><div class="feed-player" onclick="showPlayer(\'' + r.player.replace(/'/g, "\\'") + '\')">' + r.player + '</div><div class="feed-map">' + r.map + '</div></div><div class="feed-time">' + formatTime(r.duration_s) + '</div></div>';
+  }).join("");
+}
+
+function showPlayer(name) {
+  const p = playerStats[name]; if (!p) return;
+  document.getElementById("modal-player-name").textContent = name;
+  document.getElementById("modal-player-stats").textContent = p.wins + " runs · " + p.maps.size + " cartes";
+  document.getElementById("modal-wins").textContent = p.wins;
+  document.getElementById("modal-maps").textContent = p.maps.size;
+  document.getElementById("modal-avg").textContent = formatTime(Math.round(p.totalTime / p.wins));
+  const sortedRuns = [...p.runs].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+  document.getElementById("modal-runs").innerHTML = sortedRuns.map(r => {
+    const mapData = allMaps.find(m => m.map === r.map);
+    const rank = mapData ? mapData.runs.findIndex(x => x.id === r.id) + 1 : 0;
+    return '<div class="player-run-row"><div class="player-run-map">' + r.map + '</div><div class="player-run-rank">#' + rank + '</div><div class="player-run-time">' + formatTime(r.duration_s) + '</div></div>';
+  }).join("");
+  document.getElementById("player-modal").classList.add("active");
+}
+
+function closeModal(e) {
+  if (!e || e.target.id === "player-modal") {
+    document.getElementById("player-modal").classList.remove("active");
+  }
+}
+
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
 loadData();
 </script>
 </body>
