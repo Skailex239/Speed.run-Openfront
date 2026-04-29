@@ -40,7 +40,7 @@ jobs:
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add public/runs.json
+          git add runs.json
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
@@ -62,7 +62,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './public'
+          path: '.'
           
       - name: Deploy to GitHub Pages
         id: deployment

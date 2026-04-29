@@ -67,9 +67,9 @@ async function fetchGameDetail(gameId) {
 
 // Charger/Sauvegarder runs
 function loadRuns() {
-  if (fs.existsSync('public/runs.json')) {
+  if (fs.existsSync('runs.json')) {
     try {
-      return JSON.parse(fs.readFileSync('public/runs.json', 'utf8'));
+      return JSON.parse(fs.readFileSync('runs.json', 'utf8'));
     } catch (e) {
       return [];
     }
@@ -78,7 +78,7 @@ function loadRuns() {
 }
 
 function saveRuns(runs) {
-  fs.writeFileSync('public/runs.json', JSON.stringify(runs, null, 2));
+  fs.writeFileSync('runs.json', JSON.stringify(runs, null, 2));
 }
 
 function loadCheckpoint() {
