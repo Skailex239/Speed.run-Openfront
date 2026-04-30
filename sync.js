@@ -149,8 +149,9 @@ async function syncRecent() {
   console.log(`[sync] Sync recent: ${lastSync.toISOString()} → ${now.toISOString()}`);
   let totalNew = 0;
 
-  for (let end = now; end > lastSync; end -= WINDOW_MS) {
-    const start = new Date(Math.max(end.getTime() - WINDOW_MS, lastSync.getTime()));
+  for (let endTime = now.getTime(); endTime > lastSync.getTime(); endTime -= WINDOW_MS) {
+    const end = new Date(endTime);
+    const start = new Date(Math.max(endTime - WINDOW_MS, lastSync.getTime()));
     try {
       const games = await fetchGamesInWindow(start, end);
       if (games.length > 0) {
