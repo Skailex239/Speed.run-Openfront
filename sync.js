@@ -2,7 +2,7 @@ const fetch = require("node-fetch");
 const fs = require("fs");
 
 const API_BASE = "https://api.openfront.io";
-const WINDOW_MS = 2 * 60 * 1000; // 2 min windows
+const WINDOW_MS = 4 * 60 * 60 * 1000; // 4h windows
 const CONCURRENCY = 3;
 const BATCH_DELAY = 3000;
 const DELAY_429 = 30000;
@@ -70,9 +70,9 @@ async function fetchGamesInWindow(start, end) {
   const data = await fetchWithRetry(url);
   if (!data) return [];
   const games = Array.isArray(data) ? data : (data.games || []);
+  // Don't filter too aggressively - real filtering happens in extractSpeedrun
   return games.filter(g =>
-    g.mode === "Free For All" &&
-    (g.numPlayers == null || g.numPlayers >= 5)
+    g.mode === "Free For All"
   );
 }
 
@@ -151,8 +151,8 @@ async function syncRecent() {
   let lastSync = new Date(cp.lastSync);
   if (isNaN(lastSync)) lastSync = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-  // Cap to 24h max
-  const maxStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  // Cap to 48h max to catch missed runs
+  const maxStart = new Date(Date.now() - 48 * 60 * 60 * 1000);
   if (lastSync < maxStart) lastSync = maxStart;
 
   console.log(`[sync] Sync recent: ${lastSync.toISOString()} → ${now.toISOString()}`);
