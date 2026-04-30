@@ -1,38 +1,48 @@
 const fetch = require("node-fetch");
 const fs = require("fs");
 
-const API_BASE = "https://api.openfront.io";
-const WINDOW_MS = 4 * 60 * 60 * 1000; // 4h windows
-const CONCURRENCY = 3;
-const BATCH_DELAY = 3000;
-const DELAY_429 = 30000;
-const FETCH_TIMEOUT = 10000;
-const CHECKPOINT_FILE = "checkpoint.json";
+const API_BASE         = "https://api.openfront.io";
+const FETCH_TIMEOUT    = 5_000;
+const TIME_OFFSET_SECS = 32;
+
+const CONCURRENCY_NORMAL  = 5;
+const CONCURRENCY_HISTORY = 5;
+const BATCH_DELAY_NORMAL  = 1000;
+const BATCH_DELAY_HISTORY = 1000;
+const CHECKPOINT_EVERY = 20;
+const DELAY_429 = 5_000;
+
+const WINDOW_MS  = 2 * 60 * 1_000; // 2 minutes par fenêtre
+const HISTORY_MS = 360 * 24 * 60 * 60 * 1_000; // ~360 jours
+const TARGET_DATE = new Date("2025-12-01").getTime(); // remonter jusqu'au 1er déc 2025
+
 const RUNS_FILE = "runs.json";
+const CHECKPOINT_FILE = "checkpoint.json";
+const SEEN_FILE = "seen.json";
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// Load runs
+// ── Persistence ──────────────────────────────────────────────────────────────
 function loadRuns() {
   try { return JSON.parse(fs.readFileSync(RUNS_FILE, "utf8")); } catch { return []; }
 }
-
-// Save runs
 function saveRuns(runs) {
   fs.writeFileSync(RUNS_FILE, JSON.stringify(runs));
 }
-
-// Load checkpoint (timestamp of last successful sync)
-function loadCheckpoint() {
-  try { return JSON.parse(fs.readFileSync(CHECKPOINT_FILE, "utf8")); } catch { return { lastSync: Date.now() - 24 * 60 * 60 * 1000 }; }
+function loadSeen() {
+  try { return new Set(JSON.parse(fs.readFileSync(SEEN_FILE, "utf8"))); } catch { return new Set(); }
 }
-
-// Save checkpoint
-function saveCheckpoint(cp) {
+function saveSeen(seen) {
+  fs.writeFileSync(SEEN_FILE, JSON.stringify([...seen]));
+}
+function loadCheckpoints() {
+  try { return JSON.parse(fs.readFileSync(CHECKPOINT_FILE, "utf8")); } catch { return {}; }
+}
+function saveCheckpoints(cp) {
   fs.writeFileSync(CHECKPOINT_FILE, JSON.stringify(cp));
 }
 
-// Fetch with retry on 429
+// ── Fetch avec retry sur 429 ──────────────────────────────────────────────────
 async function fetchWithRetry(url, retries = 2) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     const controller = new AbortController();
@@ -42,151 +52,288 @@ async function fetchWithRetry(url, retries = 2) {
       clearTimeout(timer);
       if (res.status === 429) {
         const wait = DELAY_429 * (attempt + 1);
-        console.log(`[sync] 429 - attente ${wait/1000}s...`);
+        console.log(`[rate-limit] 429 — pause ${wait}ms (tentative ${attempt + 1})`);
         await sleep(wait);
         continue;
       }
-      if (res.status === 401) {
-        console.log(`[sync] Erreur 401: ${url}`);
-        return null;
-      }
-      if (!res.ok) {
-        console.log(`[sync] Erreur ${res.status}: ${url}`);
-        return null;
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (e) {
       clearTimeout(timer);
-      if (attempt === retries) { console.log(`[sync] Timeout: ${url}`); return null; }
-      await sleep(2000);
+      if (attempt === retries) throw e;
+      await sleep(500);
     }
   }
-  return null;
 }
 
-// Fetch games in a time window
+// ── Semaphore ─────────────────────────────────────────────────────────────────
+function createSemaphore(max) {
+  let active = 0;
+  const queue = [];
+  function next() {
+    if (active >= max || queue.length === 0) return;
+    active++;
+    const { fn, resolve, reject } = queue.shift();
+    fn().then(resolve, reject).finally(() => { active--; next(); });
+  }
+  return function run(fn) {
+    return new Promise((resolve, reject) => {
+      queue.push({ fn, resolve, reject });
+      next();
+    });
+  };
+}
+
+// ── Cartes connues ────────────────────────────────────────────────────────────
+const MAP_NAMES = {
+  Europe: "Europe", "Europe Classic": "Europe Classic", World: "Monde",
+  "World Rotated": "World Rotated", Asia: "Asie", "East Asia": "East Asia",
+  Africa: "Afrique", Australia: "Australie", Iceland: "Islande",
+  "North America": "Amérique du Nord", "South America": "Amérique du Sud",
+  Japan: "Japon", Italy: "Italie", Italia: "Italia", Britannia: "Britannia",
+  "Britannia Classic": "Britannia Classic", Mars: "Mars", Pluto: "Pluto",
+  Pangaea: "Pangée", "Bosphorus Straits": "Bosphore", "Bering Strait": "Détroit de Béring",
+  "Strait of Gibraltar": "Strait of Gibraltar", "Strait of Hormuz": "Strait of Hormuz",
+  "Black Sea": "Black Sea", "Between Two Seas": "Between Two Seas",
+  Alps: "Alpes", Hawaii: "Hawaï", Arctic: "Arctique", "Nile Delta": "Delta du Nil",
+  "San Francisco": "San Francisco", "New York City": "New York City",
+  Montreal: "Montreal", Passage: "Passage", "The Box": "The Box",
+  "Traders Dream": "Traders Dream", Yenisei: "Iénisseï", Baikal: "Baikal",
+  "Amazon River": "Amazon River", "Gulf of St. Lawrence": "Gulf of St. Lawrence",
+  "Gateway to the Atlantic": "Gateway to the Atlantic", "Falkland Islands": "Falkland Islands",
+  "Faroe Islands": "Faroe Islands", "Four Islands": "Four Islands",
+  Lemnos: "Lemnos", Aegean: "Aegean", Halkidiki: "Halkidiki", Lisbon: "Lisbon",
+  Mena: "Mena", Achiran: "Achiran", Svalmel: "Svalmel", Manicouagan: "Manicouagan",
+  Sierpinski: "Sierpinski", Surrounded: "Surrounded", "Two Lakes": "Two Lakes",
+  "Deglaciated Antarctica": "Deglaciated Antarctica",
+};
+function normalizeName(n) { return MAP_NAMES[n] || n; }
+
+// ── Appel liste de parties dans une fenêtre temporelle ────────────────────────
 async function fetchGamesInWindow(start, end) {
   const url = `${API_BASE}/public/games?start=${start.toISOString()}&end=${end.toISOString()}`;
   const data = await fetchWithRetry(url);
   if (!data) return [];
   const games = Array.isArray(data) ? data : (data.games || []);
-  // Don't filter too aggressively - real filtering happens in extractSpeedrun
   return games.filter(g =>
-    g.mode === "Free For All"
+    (g.difficulty === "Easy" || g.difficulty === "Medium" || g.difficulty === "Hard") &&
+    (g.numPlayers == null || g.numPlayers >= 10) &&
+    (g.mode === "Free For All" || g.mode === "FFA" || g.mode == null) &&
+    (g.type === "Public" || g.type == null)
   );
 }
 
-// Fetch game detail
 async function fetchGameDetail(gameId) {
   return fetchWithRetry(`${API_BASE}/public/game/${gameId}`);
 }
 
-// Extract speedrun from game detail
+function calcDuration(detail) {
+  if (detail.duration) {
+    const d = detail.duration;
+    return d > 100_000 ? Math.round(d / 1000) : d;
+  }
+  if (detail.start && detail.end) {
+    const diff = detail.end - detail.start;
+    return diff > 100_000 ? Math.round(diff / 1000) : diff;
+  }
+  return null;
+}
+
 function extractSpeedrun(raw) {
-  if (!raw || !raw.players) return null;
-  // Filter: Public only
-  if (raw.type && raw.type !== "Public") return null;
-  // Filter: FFA only
-  if (raw.mode && raw.mode !== "Free For All") return null;
-  // Filter: difficulty != 0
-  if (raw.difficulty === 0 || raw.difficulty === "0") return null;
-  // Count human players
-  const humanPlayers = raw.players.filter(p => !p.isBot);
+  const detail = raw.info;
+  if (!detail) return null;
+  const config = detail.config || {};
+
+  // ── Règles speedrun ──────────────────────────────────────────────────────
+  if (config.gameType    !== "Public")       return null;
+  if (config.gameMode    !== "Free For All") return null;
+  if (config.gameMapSize !== "Normal")       return null;
+  if (config.bots        !== 400)            return null;
+
+  const mods = config.publicGameModifiers || {};
+  if (mods.isCompact || mods.isRandomSpawn || mods.isCrowded || mods.isHardNations || mods.isAlliancesDisabled) return null;
+
+  if (config.randomSpawn  !== false) return null;
+  if (config.donateGold   !== false) return null;
+  if (config.donateTroops !== false) return null;
+  if (config.infiniteGold)           return null;
+  if (config.infiniteTroops)         return null;
+  if (config.instantBuild)           return null;
+  if (config.startingGold  != null && config.startingGold  !== 0) return null;
+  if (config.goldMultiplier != null && config.goldMultiplier !== 1) return null;
+
+  const players = detail.players || [];
+  const humanPlayers = players.filter(p => !p.isBot);
   if (humanPlayers.length < 10) return null;
-  
-  const winner = raw.players.find(p => p.won === 1 || p.won === true);
-  if (!winner) return null;
-  const start = new Date(raw.start || raw.startTime);
-  const end = new Date(raw.end || raw.endTime);
-  const duration_s = Math.round((end - start) / 1000);
-  if (duration_s < 60) return null;
+
+  const winner = detail.winner;
+  if (!winner || !Array.isArray(winner) || winner.length < 2) return null;
+
+  const winnerPlayer = players.find(p => p.clientID === winner[1]);
+  if (!winnerPlayer?.username || winnerPlayer.isBot) return null;
+
+  let durationSecs = calcDuration(detail);
+  if (!durationSecs || durationSecs < 60) return null;
+  durationSecs = Math.max(0, durationSecs - TIME_OFFSET_SECS);
+
+  const gameId = detail.gameID || detail.gameId || detail.id;
   return {
-    id: raw.game || raw.gameId || raw.id,
-    map: raw.map || raw.mapName || "Unknown",
-    player: winner.name || winner.username || winner.player,
-    duration_s,
-    timestamp: (raw.end || raw.endTime || raw.endedAt),
-    difficulty: raw.difficulty || "Unknown",
-    bots: raw.bots || raw.numPlayers || 0
+    id: gameId,
+    player: winnerPlayer.username,
+    map: normalizeName(config.gameMap || "Inconnu"),
+    duration_s: durationSecs,
+    difficulty: config.difficulty || "Medium",
+    bots: 400,
+    timestamp: detail.start
+      ? new Date(detail.start > 1e10 ? detail.start : detail.start * 1000).toISOString()
+      : new Date().toISOString(),
   };
 }
 
-// Semaphore for concurrency
-function sem(max) {
-  let active = 0, queue = [];
-  return fn => new Promise((resolve, reject) => {
-    const run = () => { active++; fn().then(resolve).catch(reject).finally(() => { active--; if (queue.length) queue.shift()(); }); };
-    if (active < max) run(); else queue.push(run);
-  });
-}
-
-// Process a batch of games
-async function processGames(games) {
-  const runs = loadRuns();
-  const seenIds = new Set(runs.map(r => r.id));
-  const unseen = games.filter(g => !seenIds.has(g.game));
+// ── Traitement parallèle avec sémaphore ───────────────────────────────────────
+async function processGames(games, { concurrency = CONCURRENCY_NORMAL, batchDelay = BATCH_DELAY_NORMAL } = {}) {
+  const seen = loadSeen();
+  const unseen = games.filter(g => g.game && !seen.has(g.game));
   if (unseen.length === 0) return 0;
 
-  const s = sem(CONCURRENCY);
-  let newCount = 0;
-  const tasks = unseen.map(game => s(async () => {
-    const raw = await fetchGameDetail(game.game);
-    if (!raw) return;
-    const run = extractSpeedrun(raw);
-    if (run && !seenIds.has(run.id)) {
-      runs.push(run);
-      seenIds.add(run.id);
-      newCount++;
-    }
-  }));
-  await Promise.allSettled(tasks);
-  if (newCount > 0) saveRuns(runs);
-  return newCount;
-}
+  console.log(`[sync] ${unseen.length} parties → parallèle (max ${concurrency} simultané)`);
 
-// Sync recent runs (last 24h)
-async function syncRecent() {
-  const cp = loadCheckpoint();
-  const now = new Date();
-  let lastSync = new Date(cp.lastSync);
-  if (isNaN(lastSync)) lastSync = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const sem = createSemaphore(concurrency);
+  let newRuns = 0;
+  let errors = 0;
+  const runs = loadRuns();
+  const runIds = new Set(runs.map(r => r.id));
 
-  // Cap to 48h max to catch missed runs
-  const maxStart = new Date(Date.now() - 48 * 60 * 60 * 1000);
-  if (lastSync < maxStart) lastSync = maxStart;
-
-  console.log(`[sync] Sync recent: ${lastSync.toISOString()} → ${now.toISOString()}`);
-  let totalNew = 0;
-
-  for (let endTime = now.getTime(); endTime > lastSync.getTime(); endTime -= WINDOW_MS) {
-    const end = new Date(endTime);
-    const start = new Date(Math.max(endTime - WINDOW_MS, lastSync.getTime()));
+  const tasks = unseen.map(game => sem(async () => {
+    const gameId = game.game;
     try {
-      const games = await fetchGamesInWindow(start, end);
-      if (games.length > 0) {
-        const n = await processGames(games);
-        totalNew += n;
+      const raw = await fetchGameDetail(gameId);
+      seen.add(gameId); // marquer même si pas de run valide
+      const run = extractSpeedrun(raw);
+      if (run && !runIds.has(run.id)) {
+        runs.push(run);
+        runIds.add(run.id);
+        newRuns++;
+        console.log(`[sync] ✅ ${run.player} — ${run.map} — ${Math.floor(run.duration_s / 60)}m${run.duration_s % 60}s`);
       }
     } catch (e) {
-      console.error(`[sync] Error window ${start.toISOString()}:`, e.message);
+      errors++;
+      console.warn(`[sync] ⚠️ ${gameId}: ${e.message}`);
     }
-    await sleep(500);
-  }
+  }));
 
-  cp.lastSync = now.getTime();
-  saveCheckpoint(cp);
-  console.log(`[sync] ✅ Sync recent terminé: ${totalNew} nouveaux runs`);
-  return totalNew;
+  await Promise.allSettled(tasks);
+
+  if (newRuns > 0) {
+    saveRuns(runs);
+    console.log(`[sync] 💾 ${newRuns} nouveaux runs sauvegardés`);
+  }
+  saveSeen(seen);
+
+  if (batchDelay > 0) await sleep(batchDelay);
+  if (errors > 0) console.log(`[sync] ${errors} erreur(s) — seront retentées`);
+  return newRuns;
 }
 
-// Main
+// ── Sync normale : fenêtre 24h ───────────────────────────────────────────────
+async function syncSpeedruns() {
+  console.log(`[sync] Démarrage normal — ${new Date().toISOString()}`);
+  let newRuns = 0;
+  try {
+    const now = new Date();
+    const ago = new Date(Date.now() - 24 * 60 * 60 * 1_000);
+    const games = await fetchGamesInWindow(ago, now);
+    console.log(`[sync] ${games.length} parties candidates`);
+    newRuns = await processGames(games, {
+      concurrency: CONCURRENCY_NORMAL,
+      batchDelay: BATCH_DELAY_NORMAL,
+    });
+    const cp = loadCheckpoints();
+    cp.last_sync_time = String(Date.now());
+    saveCheckpoints(cp);
+    console.log(`[sync] ✅ Terminé — ${newRuns} nouveaux runs`);
+  } catch (e) {
+    console.error(`[sync] ❌ ${e.message}`);
+  }
+  return newRuns;
+}
+
+// ── Sync historique avec checkpoint ──────────────────────────────────────────
+async function syncHistory() {
+  const now = Date.now();
+  const oldest = TARGET_DATE; // 1er déc 2025
+
+  const cp = loadCheckpoints();
+  const saved = cp.history_oldest_reached;
+  const resumeFrom = saved ? Math.max(parseInt(saved) - WINDOW_MS, oldest) : now;
+
+  if (saved) {
+    console.log(`[history] Reprise depuis ${new Date(resumeFrom).toISOString().slice(0,10)} (checkpoint trouvé)`);
+  } else {
+    console.log(`[history] Démarrage depuis aujourd'hui`);
+  }
+
+  const windows = [];
+  for (let end = resumeFrom; end > oldest; end -= WINDOW_MS) {
+    const start = Math.max(end - WINDOW_MS, oldest);
+    windows.push({ start: new Date(start), end: new Date(end) });
+  }
+
+  console.log(`[history] ${windows.length} fenêtres restantes jusqu'au ${new Date(oldest).toISOString().slice(0,10)}`);
+  if (windows.length === 0) {
+    console.log(`[history] ✅ Historique déjà complet`);
+    return 0;
+  }
+
+  let totalRuns = 0, done = 0;
+  let oldestReached = resumeFrom;
+
+  for (let i = 0; i < windows.length; i += CHECKPOINT_EVERY) {
+    const batch = windows.slice(i, i + CHECKPOINT_EVERY);
+
+    const batchResults = await Promise.allSettled(
+      batch.map(async ({ start, end }) => {
+        const games = await fetchGamesInWindow(start, end);
+        if (games.length === 0) return { start, runs: 0 };
+        const runs = await processGames(games, { concurrency: CONCURRENCY_NORMAL, batchDelay: 0 });
+        return { start, runs };
+      })
+    );
+
+    for (const r of batchResults) {
+      if (r.status === 'fulfilled') {
+        totalRuns += r.value.runs;
+        if (r.value.runs > 0) console.log(`[history] +${r.value.runs} (${r.value.start.toISOString().slice(0,10)})`);
+        oldestReached = r.value.start.getTime();
+      }
+    }
+
+    cp.history_oldest_reached = String(oldestReached);
+    saveCheckpoints(cp);
+    done += batch.length;
+
+    const pct = Math.round((done / windows.length) * 100);
+    console.log(`[history] 💾 Checkpoint: ${done}/${windows.length} fenêtres (${pct}%) — ${totalRuns} runs — jusqu'au ${new Date(oldestReached).toISOString().slice(0,10)}`);
+  }
+
+  console.log(`[history] ✅ Terminé — ${totalRuns} runs insérés`);
+  return totalRuns;
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
-  console.log("[sync] Démarrage...");
+  console.log("[sync] 🚀 Démarrage...");
   const runs = loadRuns();
   console.log(`[sync] ${runs.length} runs existants`);
-  await syncRecent();
+
+  // 1. Sync normale d'abord (24h) — rapide
+  await syncSpeedruns();
+
+  // 2. Sync historique en continu
+  await syncHistory();
+
   const finalRuns = loadRuns();
-  console.log(`[sync] Terminé: ${finalRuns.length} runs total`);
+  console.log(`[sync] 🏁 Terminé: ${finalRuns.length} runs total`);
 }
 
 main().catch(e => { console.error("[sync] Fatal:", e); process.exit(1); });
