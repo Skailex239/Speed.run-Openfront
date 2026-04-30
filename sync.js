@@ -10,6 +10,7 @@ const CONCURRENCY_HISTORY = 5;
 const BATCH_DELAY_NORMAL  = 1000;
 const BATCH_DELAY_HISTORY = 1000;
 const CHECKPOINT_EVERY = 20;
+const MAX_HISTORY_WINDOWS_PER_RUN = 100; // limite pour éviter que le job ne dure trop longtemps
 const DELAY_429 = 5_000;
 
 const WINDOW_MS  = 2 * 60 * 1_000; // 2 minutes par fenêtre
@@ -288,8 +289,8 @@ async function syncHistory() {
   let totalRuns = 0, done = 0;
   let oldestReached = resumeFrom;
 
-  for (let i = 0; i < windows.length; i += CHECKPOINT_EVERY) {
-    const batch = windows.slice(i, i + CHECKPOINT_EVERY);
+  for (let i = 0; i < windows.length && i < MAX_HISTORY_WINDOWS_PER_RUN; i += CHECKPOINT_EVERY) {
+    const batch = windows.slice(i, Math.min(i + CHECKPOINT_EVERY, MAX_HISTORY_WINDOWS_PER_RUN));
 
     const batchResults = await Promise.allSettled(
       batch.map(async ({ start, end }) => {
@@ -316,7 +317,11 @@ async function syncHistory() {
     console.log(`[history] 💾 Checkpoint: ${done}/${windows.length} fenêtres (${pct}%) — ${totalRuns} runs — jusqu'au ${new Date(oldestReached).toISOString().slice(0,10)}`);
   }
 
-  console.log(`[history] ✅ Terminé — ${totalRuns} runs insérés`);
+  if (windows.length > MAX_HISTORY_WINDOWS_PER_RUN) {
+    console.log(`[history] ⏹️ Limite atteinte (${MAX_HISTORY_WINDOWS_PER_RUN} fenêtres) — reprendra au prochain run`);
+  } else {
+    console.log(`[history] ✅ Terminé — ${totalRuns} runs insérés`);
+  }
   return totalRuns;
 }
 
