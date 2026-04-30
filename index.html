@@ -160,7 +160,8 @@ function formatDate(iso) { const d = new Date(iso); return d.toLocaleDateString(
 
 async function loadData() {
   try {
-    const r = await fetch("runs.json");
+    const cacheBuster = "?_=" + Date.now();
+    const r = await fetch("runs.json" + cacheBuster);
     if (!r.ok) throw new Error("Failed");
     allRuns = await r.json();
     processData();
