@@ -71,9 +71,8 @@ async function fetchGamesInWindow(start, end) {
   if (!data) return [];
   const games = Array.isArray(data) ? data : (data.games || []);
   return games.filter(g =>
-    g.type === "Public" &&
     g.mode === "Free For All" &&
-    g.numPlayers >= 10
+    (g.numPlayers == null || g.numPlayers >= 5)
   );
 }
 
@@ -85,6 +84,16 @@ async function fetchGameDetail(gameId) {
 // Extract speedrun from game detail
 function extractSpeedrun(raw) {
   if (!raw || !raw.players) return null;
+  // Filter: Public only
+  if (raw.type && raw.type !== "Public") return null;
+  // Filter: FFA only
+  if (raw.mode && raw.mode !== "Free For All") return null;
+  // Filter: difficulty != 0
+  if (raw.difficulty === 0 || raw.difficulty === "0") return null;
+  // Count human players
+  const humanPlayers = raw.players.filter(p => !p.isBot);
+  if (humanPlayers.length < 10) return null;
+  
   const winner = raw.players.find(p => p.won === 1 || p.won === true);
   if (!winner) return null;
   const start = new Date(raw.start || raw.startTime);
