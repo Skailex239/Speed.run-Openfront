@@ -116,11 +116,10 @@ async function fetchGamesInWindow(start, end) {
   const data = await fetchWithRetry(url);
   if (!data) return [];
   const games = Array.isArray(data) ? data : (data.games || []);
+  // Filtre minimal - le vrai filtre se fait dans extractSpeedrun
   return games.filter(g =>
-    (g.difficulty === "Easy" || g.difficulty === "Medium" || g.difficulty === "Hard") &&
-    (g.numPlayers == null || g.numPlayers >= 10) &&
     (g.mode === "Free For All" || g.mode === "FFA" || g.mode == null) &&
-    (g.type === "Public" || g.type == null)
+    (g.numPlayers == null || g.numPlayers >= 5)
   );
 }
 
