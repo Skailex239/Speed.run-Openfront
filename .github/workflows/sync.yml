@@ -9,6 +9,9 @@ on:
     paths:
       - 'index.html'
       - '.github/workflows/sync.yml'
+      - 'runs.json'
+      - 'checkpoint.json'
+      - 'seen.json'
 
 permissions:
   contents: write
