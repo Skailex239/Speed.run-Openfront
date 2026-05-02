@@ -5,12 +5,12 @@ const API_BASE         = "https://api.openfront.io";
 const FETCH_TIMEOUT    = 5_000;
 const TIME_OFFSET_SECS = 32;
 
-const CONCURRENCY_NORMAL  = 5;
-const CONCURRENCY_HISTORY = 5;
-const BATCH_DELAY_NORMAL  = 1000;
-const BATCH_DELAY_HISTORY = 1000;
+const CONCURRENCY_NORMAL  = 10;
+const CONCURRENCY_HISTORY = 10;
+const BATCH_DELAY_NORMAL  = 500;
+const BATCH_DELAY_HISTORY = 500;
 const CHECKPOINT_EVERY = 20;
-const MAX_HISTORY_WINDOWS_PER_RUN = 100; // limite pour éviter que le job ne dure trop longtemps
+const MAX_HISTORY_WINDOWS_PER_RUN = 2000; // limite augmentée pour récupérer plus de runs
 const DELAY_429 = 5_000;
 
 const WINDOW_MS  = 2 * 60 * 1_000; // 2 minutes par fenêtre

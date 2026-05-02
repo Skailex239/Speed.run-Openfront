@@ -219,7 +219,7 @@ function selectMap(name) {
   document.getElementById("content-title").textContent = name;
   document.getElementById("content-meta").textContent = d.total + " runs · Meilleur: " + formatTime(d.best);
   const medals = ["🥇","🥈","🥉"];
-  document.getElementById("leaderboard").innerHTML = d.runs.slice(0,50).map((r,i) => {
+  document.getElementById("leaderboard").innerHTML = d.runs.slice(0,5).map((r,i) => {
     const rc = i===0?"gold":i===1?"silver":i===2?"bronze":"";
     return '<div class="run-row" onclick="showPlayer(\'' + r.player.replace(/'/g, "\\'") + '\')"><div class="run-rank ' + rc + '">' + (i+1) + '</div><div class="run-player">' + (i<3?medals[i]+" ":"") + r.player + '</div><div class="run-time">' + formatTime(r.duration_s) + '</div><div class="run-date">' + formatDate(r.timestamp) + '</div></div>';
   }).join("");
